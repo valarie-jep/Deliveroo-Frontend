@@ -1,10 +1,55 @@
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate
+} from 'react-router-dom';
+import { useSelector } from 'react-redux';
+
+const Login = () => <div>Login Page</div>;
+const Register = () => <div>Register Page</div>;
+const Dashboard = () => <div>Dashboard Page</div>;
+const Parcel = () => <div>Parcel Details Page</div>;
+const Admin = () => <div>Admin Page</div>;
+
+function PrivateRoute({ children }) {
+  const token = useSelector((state) => state.auth.token);
+  return token ? children : <Navigate to="/login" replace />;
+}
+
 function App() {
   return (
-    <div className="flex items-center justify-center h-screen bg-blue-100">
-      <h1 className="text-3xl font-bold text-blue-600">
-        Deliveroo Frontend Setup Successful! 🚀
-      </h1>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/parcel/:id"
+          element={
+            <PrivateRoute>
+              <Parcel />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute>
+              <Admin />
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
