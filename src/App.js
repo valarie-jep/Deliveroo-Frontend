@@ -5,11 +5,13 @@ import {
   Navigate
 } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import Dashboard from './pages/Dashboard';
+import Parcels from './pages/Parcels';
 
 const Login = () => <div>Login Page</div>;
 const Register = () => <div>Register Page</div>;
-const Dashboard = () => <div>Dashboard Page</div>;
-const Parcel = () => <div>Parcel Details Page</div>;
+
+
 const Admin = () => <div>Admin Page</div>;
 
 function PrivateRoute({ children }) {
@@ -32,10 +34,10 @@ function App() {
           }
         />
         <Route
-          path="/parcel/:id"
+          path="/parcels/:id"
           element={
             <PrivateRoute>
-              <Parcel />
+              <Parcels />
             </PrivateRoute>
           }
         />

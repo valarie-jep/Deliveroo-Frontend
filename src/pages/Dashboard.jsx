@@ -1,8 +1,11 @@
 import React from 'react'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
-function Landing() {
+function Dashboard() {
   return (
     <div>
+        <Navbar/>
         <div className='flex flex-col items-center justify-center'>
             <h1>Deliver Your World With</h1>
             <h1>Confidence</h1>
@@ -13,7 +16,7 @@ function Landing() {
                 <button>Get Started</button>
             </p>
             <div>
-                <img src={} alt="Landing" />
+                <img src={} alt="Dashboard" />
             </div>
         </div>
         <div>
@@ -78,9 +81,9 @@ function Landing() {
             <p>Join thousands of businesses and individuals who trust Deliveroo with their shipping needs.</p>
             <button>Create Your Account Now</button>
         </div>
-        
+        <Footer/>
     </div>
   )
 }
 
-export default Landing
+export default Dashboard
