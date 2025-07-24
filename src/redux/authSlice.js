@@ -2,10 +2,10 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { Meta } from 'react-router-dom';
+
 // Replace with your actual API URL
-//const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
-const BASE_URL = 'http://127.0.0.1:5000';
+const BASE_URL = 'https://deliveroo-server.onrender.com/';
+
 
 // Async thunk to log in a user
 export const loginUser = createAsyncThunk(
