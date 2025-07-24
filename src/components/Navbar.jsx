@@ -5,7 +5,7 @@ function Navbar() {
   return (
     <nav>
         <div>
-            <Link to="/">Deliveroo</Link>
+            <Link to="/">📦Deliveroo</Link>
         </div>
         <div>
             <Link to="/">Home</Link>

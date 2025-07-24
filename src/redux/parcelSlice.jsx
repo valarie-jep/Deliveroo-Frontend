@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'https://deliveroo-server.onrender.com';
+
+const BASE_URL = 'https://deliveroo-server.onrender.com/';
+
 
 // Helper to get auth token
 const getAuthHeaders = (thunkAPI) => {
