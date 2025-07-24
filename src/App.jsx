@@ -7,10 +7,15 @@ import {
 } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import LoginPage from "./components/LoginPage";
-import RegisterPage from "./components/RegisterPage";
+import LoginPage from "./components/LoginPage.jsx";
+import RegisterPage from "./components/RegisterPage.jsx";
+import CreateParcelPage from "./pages/CreateParcelPage.jsx";
 import Dashboard from "./components/Dashboard";
 import authReducer from "./redux/authSlice";
+
+// Placeholder components if not implemented
+const Parcel = () => <div>Parcel Details Page</div>;
+const Admin = () => <div>Admin Page</div>;
 
 const store = configureStore({
   reducer: {
@@ -38,13 +43,36 @@ const App = () => {
               </AuthWrapper>
             }
           />
+          <Route
+            path="/parcel/:id"
+            element={
+              <AuthWrapper>
+                <Parcel />
+              </AuthWrapper>
+            }
+          />
+          <Route
+            path="/parcels/new"
+            element={
+              <AuthWrapper>
+                <CreateParcelPage />
+              </AuthWrapper>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AuthWrapper>
+                <Admin />
+              </AuthWrapper>
+            }
+          />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
     </Provider>
   );
-}
-;
+};
 
 export default App;

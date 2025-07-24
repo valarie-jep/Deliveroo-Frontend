@@ -1,25 +1,20 @@
-// src/redux/authSlice.js
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Replace with your actual API URL
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://deliveroo-server.onrender.com/';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://deliveroo-server.onrender.com/';
 
-// Async thunk to log in a user
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (formData, thunkAPI) => {
     try {
       const response = await axios.post(`${BASE_URL}/login`, formData);
-      return response.data; // Should include token + user info
+      return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response.data.message || 'Login failed');
     }
   }
 );
 
-// Async thunk to register a user
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (formData, thunkAPI) => {
@@ -53,7 +48,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -69,15 +63,12 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
-      // Register
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Depending on backend, you may want to log them in here
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
