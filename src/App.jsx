@@ -1,67 +1,78 @@
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate
-} from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import CreateParcelPage from './pages/CreateParcelPage';
-import LoginPage from './components/LoginPage.jsx';
-import RegisterPage from './components/RegisterPage.jsx';
+  Navigate,
+} from "react-router-dom";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import LoginPage from "./components/LoginPage.jsx";
+import RegisterPage from "./components/RegisterPage.jsx";
+import CreateParcelPage from "./pages/CreateParcelPage.jsx";
+import Dashboard from "./components/Dashboard";
+import authReducer from "./redux/authSlice";
 
-const Login = () => <LoginPage />;
-const Register = () => <RegisterPage />;
-const Dashboard = () => <div>Dashboard Page</div>;
+// Placeholder components if not implemented
 const Parcel = () => <div>Parcel Details Page</div>;
 const Admin = () => <div>Admin Page</div>;
 
-function PrivateRoute({ children }) {
-  const token = useSelector((state) => state.auth.token);
-  return token ? children : <Navigate to="/login" replace />;
-}
+const store = configureStore({
+  reducer: {
+    auth: authReducer,
+  },
+});
 
-function App() {
+const AuthWrapper = ({ children }) => {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/login" replace />;
+};
+
+const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/parcel/:id"
-          element={
-            <PrivateRoute>
-              <Parcel />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/parcels/new"
-          element={
-            <PrivateRoute>
-              <CreateParcelPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <PrivateRoute>
-              <Admin />
-            </PrivateRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Router>
+    <Provider store={store}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <AuthWrapper>
+                <Dashboard />
+              </AuthWrapper>
+            }
+          />
+          <Route
+            path="/parcel/:id"
+            element={
+              <AuthWrapper>
+                <Parcel />
+              </AuthWrapper>
+            }
+          />
+          <Route
+            path="/parcels/new"
+            element={
+              <AuthWrapper>
+                <CreateParcelPage />
+              </AuthWrapper>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AuthWrapper>
+                <Admin />
+              </AuthWrapper>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Router>
+    </Provider>
   );
-}
+};
 
 export default App;
