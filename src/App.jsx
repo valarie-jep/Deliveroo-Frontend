@@ -5,9 +5,12 @@ import {
   Navigate
 } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import CreateParcelPage from './pages/CreateParcelPage';
+import LoginPage from './components/LoginPage.jsx';
+import RegisterPage from './components/RegisterPage.jsx';
 
-const Login = () => <div>Login Page</div>;
-const Register = () => <div>Register Page</div>;
+const Login = () => <LoginPage />;
+const Register = () => <RegisterPage />;
 const Dashboard = () => <div>Dashboard Page</div>;
 const Parcel = () => <div>Parcel Details Page</div>;
 const Admin = () => <div>Admin Page</div>;
@@ -36,6 +39,14 @@ function App() {
           element={
             <PrivateRoute>
               <Parcel />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/parcels/new"
+          element={
+            <PrivateRoute>
+              <CreateParcelPage />
             </PrivateRoute>
           }
         />
