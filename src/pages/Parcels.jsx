@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getParcels } from '../redux/parcelSlice';
-import ParcelCard from './ParcelCard';
+import ParcelCard from '../components/ParcelCard';
 
 const Parcels = () => {
   const dispatch = useDispatch();
