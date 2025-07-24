@@ -1,78 +1,74 @@
-import React from "react";
+import React from 'react';
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
-} from "react-router-dom";
-import { Provider } from "react-redux";
-import { configureStore } from "@reduxjs/toolkit";
-import LoginPage from "./components/LoginPage.jsx";
-import RegisterPage from "./components/RegisterPage.jsx";
-import CreateParcelPage from "./pages/CreateParcelPage.jsx";
-import Dashboard from "./components/Dashboard";
-import authReducer from "./redux/authSlice";
+  Navigate
+} from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import CreateParcelPage from './pages/CreateParcelPage';
+import LoginPage from './components/LoginPage.jsx';
+import RegisterPage from './components/RegisterPage.jsx';
+import Landing from './pages/Landing.jsx';
+import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
 
-// Placeholder components if not implemented
+const Login = () => <LoginPage />;
+const Register = () => <RegisterPage />;
+const Dashboard = () => <div>Dashboard Page</div>;
 const Parcel = () => <div>Parcel Details Page</div>;
 const Admin = () => <div>Admin Page</div>;
 
-const store = configureStore({
-  reducer: {
-    auth: authReducer,
-  },
-});
-
-const AuthWrapper = ({ children }) => {
-  const token = localStorage.getItem("token");
+function PrivateRoute({ children }) {
+  const token = useSelector((state) => state.auth.token);
   return token ? children : <Navigate to="/login" replace />;
-};
+}
 
-const App = () => {
+function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <AuthWrapper>
-                <Dashboard />
-              </AuthWrapper>
-            }
-          />
-          <Route
-            path="/parcel/:id"
-            element={
-              <AuthWrapper>
-                <Parcel />
-              </AuthWrapper>
-            }
-          />
-          <Route
-            path="/parcels/new"
-            element={
-              <AuthWrapper>
-                <CreateParcelPage />
-              </AuthWrapper>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <AuthWrapper>
-                <Admin />
-              </AuthWrapper>
-            }
-          />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
-    </Provider>
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/parcel/:id"
+          element={
+            <PrivateRoute>
+              <Parcel />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/parcels/new"
+          element={
+            <PrivateRoute>
+              <CreateParcelPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute>
+              <Admin />
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Footer />
+    </Router>
   );
-};
+}
 
 export default App;
