@@ -10,7 +10,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import LoginPage from "./components/LoginPage.jsx";
 import RegisterPage from "./components/RegisterPage.jsx";
 import CreateParcelPage from "./pages/CreateParcelPage.jsx";
-import Dashboard from "./components/Dashboard";
+import Dashboard from "./pages/Dashboard";
 import authReducer from "./redux/authSlice";
 
 // Placeholder components if not implemented
@@ -38,13 +38,13 @@ const App = () => {
           <Route
             path="/dashboard"
             element={
-              <AuthWrapper>
+              
                 <Dashboard />
-              </AuthWrapper>
+             
             }
           />
           <Route
-            path="/parcel/:id"
+            path="/parcels/:id"
             element={
               <AuthWrapper>
                 <Parcel />
