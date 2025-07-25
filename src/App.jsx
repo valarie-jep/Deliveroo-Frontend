@@ -7,7 +7,6 @@ import {
   useLocation 
 } from "react-router-dom";
 import { Provider } from "react-redux";
-import { useSelector } from "react-redux";
 
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./components/RegisterPage.jsx";
@@ -17,6 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import Parcels from "./pages/Parcels.jsx"
 import Admin from "./pages/Admin.jsx";
 import store from './redux/store';
+import ParcelDetails from "./pages/ParcelDetails.jsx";
 
 // Placeholder components if not implemented
 
@@ -81,6 +81,10 @@ const App = () => {
             element={
                 <CreateParcelPage />
             }
+          />
+          <Route
+            path="/parcels/:id"
+            element={<ParcelDetails />}
           />
           <Route
             path="/admin/*"

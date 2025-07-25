@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "../redux/authSlice";
 import LoginForm from "../components/auth/LoginForm";
 import Navbar from '../components/Navbar';
@@ -9,7 +9,6 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const { loading, error, token , user} = useSelector((state) => state.auth);
 

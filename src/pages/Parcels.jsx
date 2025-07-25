@@ -24,11 +24,13 @@ const Parcels = () => {
   const filteredList = user ? list.filter(parcel => parcel.user_id === user.id) : [];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-      <Navbar/>
-      {filteredList.map(parcel => (
-        <ParcelCard key={parcel.id} parcel={parcel} />
-      ))}
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 mt-8">
+        {filteredList.map(parcel => (
+          <ParcelCard key={parcel.id} parcel={parcel} />
+        ))}
+      </div>
     </div>
   );
 };

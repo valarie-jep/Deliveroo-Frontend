@@ -10,23 +10,23 @@ const Footer = () => (
           Deliveroo is your trusted partner for fast, reliable, and affordable deliveries. Join thousands of happy customers today!
         </p>
         <div className={styles.footerSocial}>
-          <a href="#" className={styles.footerLink}>Facebook</a>
-          <a href="#" className={styles.footerLink}>Twitter</a>
-          <a href="#" className={styles.footerLink}>Instagram</a>
+          <a href="https://facebook.com" className={styles.footerLink} target="_blank" rel="noopener noreferrer">Facebook</a>
+          <a href="https://twitter.com" className={styles.footerLink} target="_blank" rel="noopener noreferrer">Twitter</a>
+          <a href="https://instagram.com" className={styles.footerLink} target="_blank" rel="noopener noreferrer">Instagram</a>
         </div>
       </div>
       <div className={styles.footerLinks}>
         <div className={styles.footerLinksCol}>
           <div className={styles.footerLinksTitle}>Company</div>
-          <a href="#" className={styles.footerLink}>About</a>
-          <a href="#" className={styles.footerLink}>Careers</a>
-          <a href="#" className={styles.footerLink}>Blog</a>
+          <a href="/about" className={styles.footerLink}>About</a>
+          <a href="/careers" className={styles.footerLink}>Careers</a>
+          <a href="/blog" className={styles.footerLink}>Blog</a>
         </div>
         <div className={styles.footerLinksCol}>
           <div className={styles.footerLinksTitle}>Support</div>
-          <a href="#" className={styles.footerLink}>Help Center</a>
-          <a href="#" className={styles.footerLink}>Contact Us</a>
-          <a href="#" className={styles.footerLink}>FAQs</a>
+          <a href="/help" className={styles.footerLink}>Help Center</a>
+          <a href="/contact" className={styles.footerLink}>Contact Us</a>
+          <a href="/faqs" className={styles.footerLink}>FAQs</a>
         </div>
       </div>
     </div>
