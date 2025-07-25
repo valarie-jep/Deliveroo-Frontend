@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
+import { loginUser } from "../redux/authSlice";
 import LoginForm from "./auth/LoginForm";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || "/dashboard";
+
+  const { loading, error, token , user} = useSelector((state) => state.auth);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,31 +21,31 @@ const LoginPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    const validationErrors = {};
-    if (!formData.email) validationErrors.email = "Email is required";
-    if (!formData.password) validationErrors.password = "Password is required";
-
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      setIsLoading(false);
-      return;
-    }
-
-    console.log("Login form submitted:", formData);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    dispatch(loginUser(formData));
   };
+
+  // ✅ Redirect after successful login
+ useEffect(() => {
+  console.log("token:", token);
+  console.log("user:", user);
+  if (token && user) {
+    if (user.admin) {
+      navigate(from || "/", { replace: true });
+    } else {
+      navigate(from || "/dashboard", { replace: true });
+    }
+  }
+}, [token, user, navigate, from]);
+
+
 
   return (
     <LoginForm
       formData={formData}
       handleChange={handleChange}
       handleSubmit={handleSubmit}
-      errors={errors}
-      isLoading={isLoading}
+      errors={error ? { general: error } : {}}
+      isLoading={loading}
     />
   );
 };

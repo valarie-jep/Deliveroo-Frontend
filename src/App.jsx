@@ -4,28 +4,32 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation 
 } from "react-router-dom";
 import { Provider } from "react-redux";
-import { configureStore } from "@reduxjs/toolkit";
+
 import LoginPage from "./components/LoginPage.jsx";
 import RegisterPage from "./components/RegisterPage.jsx";
 import CreateParcelPage from "./pages/CreateParcelPage.jsx";
 import Dashboard from "./pages/Dashboard";
-import authReducer from "./redux/authSlice";
+
+import Parcels from "./pages/Parcels.jsx"
+import store from './redux/store';
 
 // Placeholder components if not implemented
-const Parcel = () => <div>Parcel Details Page</div>;
+
 const Admin = () => <div>Admin Page</div>;
 
-const store = configureStore({
-  reducer: {
-    auth: authReducer,
-  },
-});
 
 const AuthWrapper = ({ children }) => {
   const token = localStorage.getItem("token");
-  return token ? children : <Navigate to="/login" replace />;
+  const location = useLocation();
+
+  return token ? (
+    children
+  ) : (
+    <Navigate to="/login" replace state={{ from: location }} />
+  );
 };
 
 const App = () => {
@@ -44,19 +48,19 @@ const App = () => {
             }
           />
           <Route
-            path="/parcels/:id"
+            path="/parcels"
             element={
-              <AuthWrapper>
-                <Parcel />
-              </AuthWrapper>
+              
+                <Parcels />
+              
             }
           />
           <Route
             path="/parcels/new"
             element={
-              <AuthWrapper>
+              
                 <CreateParcelPage />
-              </AuthWrapper>
+             
             }
           />
           <Route

@@ -29,14 +29,14 @@ const LoginForm = ({
       />
       <div className="flex items-center justify-between mb-4">
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           type="submit"
           disabled={isLoading}
         >
           {isLoading ? "Signing in..." : "Sign In"}
         </button>
         <Link
-          className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+          className="inline-block align-baseline font-bold text-sm text-orange-500 hover:text-orange-700"
           to="/forgot-password"
         >
           Forgot Password?
@@ -47,7 +47,7 @@ const LoginForm = ({
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="text-blue-500 hover:text-blue-800 font-bold"
+            className="text-orange-500 hover:text-orange-700 font-bold"
           >
             Register here
           </Link>
