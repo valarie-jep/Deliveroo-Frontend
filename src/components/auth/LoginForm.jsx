@@ -27,7 +27,15 @@ const LoginForm = ({
         onChange={handleChange}
         error={errors.password}
       />
+      <div>
+         {errors.general && (
+          <div className="text-red-500 text-sm mb-2">
+            Invalid Username or password
+          </div>
+        )}
+      </div>
       <div className="flex items-center justify-between mb-4">
+       
         <button
           className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           type="submit"

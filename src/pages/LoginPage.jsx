@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { loginUser } from "../redux/authSlice";
 import LoginForm from "../components/auth/LoginForm";
-import Navbar from '../components/Navbar';
+import Navbar from "../components/Navbar";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const { loading, error, token , user} = useSelector((state) => state.auth);
+  const { loading, error, token, user } = useSelector((state) => state.auth);
+
+  // 🧠 Get the original page user tried to visit
+  const from = location.state?.from?.pathname || (user?.admin ? "/admin" : "/parcels");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,19 +27,11 @@ const LoginPage = () => {
   };
 
   // ✅ Redirect after successful login
- useEffect(() => {
-  if (error) {
-  }
-  if (token && user) {
-    if (user.admin) {
-      navigate("/admin", { replace: true });
-    } else {
-      navigate("/parcels", { replace: true });
+  useEffect(() => {
+    if (token && user) {
+      navigate(from, { replace: true });
     }
-  }
-}, [token, user, navigate, error]);
-
-
+  }, [token, user, navigate, from]);
 
   return (
     <>

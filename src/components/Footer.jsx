@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link,useNavigate} from 'react-router-dom';
 import { FaBox, FaLock, FaClock } from 'react-icons/fa';
 
 function Footer() {
+  const navigate = useNavigate();
   return (
     <footer className="bg-[#1A1A1A] text-white px-6 md:px-20 py-16">
       {/* Hero CTA */}
@@ -32,10 +33,10 @@ function Footer() {
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
-          <button className="bg-orange-500 text-white px-6 py-3 rounded-md font-medium hover:bg-orange-600 transition">
+          <button onClick={() => navigate('/register')}className="bg-orange-500 text-white px-6 py-3 rounded-md font-medium hover:bg-orange-600 transition">
             Create an Account →
           </button>
-          <button className="bg-white text-black px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition">
+          <button onClick={() => navigate('/login')} className="bg-white text-black px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition">
             Log In
           </button>
         </div>

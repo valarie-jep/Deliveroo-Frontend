@@ -17,7 +17,8 @@ import Parcels from "./pages/Parcels.jsx"
 import Admin from "./pages/Admin.jsx";
 import store from './redux/store';
 import ParcelDetails from "./pages/ParcelDetails.jsx";
-
+import TrackingPage from "./pages/TrackingPage.jsx";
+import Profile from "./pages/Profile.jsx"
 // Placeholder components if not implemented
 
 
@@ -94,6 +95,20 @@ const App = () => {
               </AuthWrapper>
             }
           />
+          <Route 
+          path="/tracking" 
+          element={
+            <AuthWrapper>
+                <TrackingPage />
+              </AuthWrapper>
+            } />
+          <Route 
+          path="/profile" 
+          element={
+            <AuthWrapper>
+                <Profile />
+              </AuthWrapper>
+            } />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

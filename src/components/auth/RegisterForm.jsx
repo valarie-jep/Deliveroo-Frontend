@@ -52,6 +52,13 @@ const RegisterForm = ({
         error={errors.confirmPassword}
       />
       <div>
+      {errors.general && (
+        <div className="text-red-500 text-sm text-center mb-2">
+          {errors.general}
+        </div>
+      )}
+      </div>
+      <div>
         <button
           className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           type="submit"
