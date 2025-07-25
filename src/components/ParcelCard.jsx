@@ -1,7 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaMapMarkerAlt, FaUser, FaPhoneAlt, FaBox, FaClock, FaMapPin } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { cancelParcel } from '../redux/parcelSlice';
 
 const ParcelCard = ({ parcel }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+
+  const handleCancel = async () => {
+    setCancelLoading(true);
+    setCancelError(null);
+    try {
+      await dispatch(cancelParcel(parcel.id)).unwrap();
+    } catch (err) {
+      setCancelError(err?.message || err?.error || 'Failed to cancel parcel.');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const handleView = () => {
+    navigate(`/parcels/${parcel.id}`);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-md p-4 md:p-6 border border-gray-200 transition hover:shadow-lg">
       <div className="flex justify-between items-center mb-3">
@@ -81,10 +105,25 @@ const ParcelCard = ({ parcel }) => {
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <FaClock />
           <span>{new Date(parcel.created_at).toLocaleString()}</span>
-
         </div>
-          
 
+        {/* Actions */}
+        <div className="flex gap-3 mt-4">
+          <button
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold"
+            onClick={handleView}
+          >
+            View Details
+          </button>
+          <button
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold disabled:opacity-50"
+            onClick={handleCancel}
+            disabled={cancelLoading || parcel.status === 'cancelled' || parcel.status === 'delivered'}
+          >
+            {cancelLoading ? 'Cancelling...' : 'Cancel Parcel'}
+          </button>
+        </div>
+        {cancelError && <div className="text-red-600 text-sm mt-2">{cancelError}</div>}
       </div>
     </div>
   );
