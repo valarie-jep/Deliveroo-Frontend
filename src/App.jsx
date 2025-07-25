@@ -43,6 +43,16 @@ const UserOnlyRoute = ({ children }) => {
   return children;
 };
 
+const AdminRedirectRoute = ({ children }) => {
+  const user = localStorage.getItem("user");
+  const isAdmin = user && JSON.parse(user).admin;
+  const location = useLocation();
+  if (isAdmin) {
+    return <Navigate to="/admin" replace state={{ from: location }} />;
+  }
+  return children;
+};
+
 const App = () => {
   return (
     <Provider store={store}>
@@ -53,9 +63,9 @@ const App = () => {
           <Route
             path="/dashboard"
             element={
-              
+              <AdminRedirectRoute>
                 <Dashboard />
-             
+              </AdminRedirectRoute>
             }
           />
           <Route
@@ -75,7 +85,7 @@ const App = () => {
             }
           />
           <Route
-            path="/admin"
+            path="/admin/*"
             element={
               <AuthWrapper>
                 <Admin />
