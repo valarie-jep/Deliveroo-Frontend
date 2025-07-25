@@ -1,27 +1,44 @@
 import React from 'react';
 import { FaMapMarkerAlt, FaUser, FaPhoneAlt, FaBox, FaClock, FaMapPin } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
-
-
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  cancelParcel,
+  updateParcelDestination,
+  updateParcelStatus,
+  updateParcelLocation
+} from '../redux/parcelSlice'; 
 
 const ParcelCard = ({ parcel }) => {
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   const handleCancel = (id) => {
-    console.log("Cancel Parcel:", id);
+    if (window.confirm('Are you sure you want to cancel this parcel?')) {
+      dispatch(cancelParcel(id));
+    }
   };
 
   const handleChangeDestination = (id) => {
-    console.log("Change destination for Parcel:", id);
+    const newDestination = prompt('Enter new destination:');
+    if (newDestination) {
+      dispatch(updateParcelDestination({ parcelId: id, newDestination }));
+    }
   };
 
   const handleUpdateStatus = (id) => {
-    console.log("Update status for Parcel:", id);
+    const status = prompt('Enter new status (e.g., in-transit, delivered, cancelled):');
+    if (status) {
+      dispatch(updateParcelStatus({ parcelId: id, status }));
+    }
   };
 
   const handleUpdateLocation = (id) => {
-    console.log("Update location for Parcel:", id);
+    const location = prompt('Enter new current location:');
+    if (location) {
+      dispatch(updateParcelLocation({ parcelId: id, location }));
+    }
   };
+
   return (
     <div className="bg-white rounded-2xl shadow-md p-4 md:p-6 border border-gray-200 transition hover:shadow-lg">
       <div className="flex justify-between items-center mb-3">
@@ -45,7 +62,7 @@ const ParcelCard = ({ parcel }) => {
         {/* Sender */}
         <div className="flex items-center gap-2 text-sm">
           <FaUser className="text-indigo-500" />
-          <span className="font-medium">{parcel.sender_name}</span> — 
+          <span className="font-medium">{parcel.sender_name}</span> —
           <FaPhoneAlt className="ml-2 text-gray-500" />
           <span>{parcel.sender_phone_number}</span>
         </div>
@@ -53,7 +70,7 @@ const ParcelCard = ({ parcel }) => {
         {/* Recipient */}
         <div className="flex items-center gap-2 text-sm">
           <FaUser className="text-green-600" />
-          <span className="font-medium">{parcel.recipient_name}</span> — 
+          <span className="font-medium">{parcel.recipient_name}</span> —
           <FaPhoneAlt className="ml-2 text-gray-500" />
           <span>{parcel.recipient_phone_number}</span>
         </div>
@@ -101,47 +118,46 @@ const ParcelCard = ({ parcel }) => {
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <FaClock />
           <span>{new Date(parcel.created_at).toLocaleString()}</span>
-
         </div>
+
+        {/* Action Buttons */}
         <div className="mt-4 flex gap-3 flex-wrap">
-        {/* Cancel & Change Destination - only if not delivered and owned by user */}
-        {user && parcel.status !== 'delivered' && parcel.user_id === user.id && (
-          <>
-            <button
-              className="px-4 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition"
-              onClick={() => handleCancel(parcel.id)}
-            >
-              Cancel
-            </button>
-            <button
-              className="px-4 py-1 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition"
-              onClick={() => handleChangeDestination(parcel.id)}
-            >
-              Change Destination
-            </button>
-          </>
-        )}
+          {/* Cancel & Change Destination - only if not delivered and owned by user */}
+          {user && parcel.status !== 'delivered' && parcel.user_id === user.id && (
+            <>
+              <button
+                className="px-4 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                onClick={() => handleCancel(parcel.id)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-1 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition"
+                onClick={() => handleChangeDestination(parcel.id)}
+              >
+                Change Destination
+              </button>
+            </>
+          )}
 
-        {/* Admin-only actions */}
-        {user?.admin && (
-          <>
-            <button
-              className="px-4 py-1 text-sm bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition"
-              onClick={() => handleUpdateStatus(parcel.id)}
-            >
-              Update Status
-            </button>
-            <button
-              className="px-4 py-1 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 transition"
-              onClick={() => handleUpdateLocation(parcel.id)}
-            >
-              Update Location
-            </button>
-          </>
-        )}
-      </div>
-  
-
+          {/* Admin-only actions */}
+          {user?.admin && (
+            <>
+              <button
+                className="px-4 py-1 text-sm bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition"
+                onClick={() => handleUpdateStatus(parcel.id)}
+              >
+                Update Status
+              </button>
+              <button
+                className="px-4 py-1 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 transition"
+                onClick={() => handleUpdateLocation(parcel.id)}
+              >
+                Update Location
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
