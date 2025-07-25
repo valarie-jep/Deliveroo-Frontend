@@ -12,18 +12,18 @@ const LoginForm = ({
   return (
     <AuthForm title="Sign in to your account" onSubmit={handleSubmit}>
       <InputField
-        label="Email Address"
-        type="email"
-        name="email"
-        value={formData.email}
+        label="Username"
+        type="text"
+        name="username"
+        value={formData.username || ""}
         onChange={handleChange}
-        error={errors.email}
+        error={errors.username}
       />
       <InputField
         label="Password"
         type="password"
         name="password"
-        value={formData.password}
+        value={formData.password || ""}
         onChange={handleChange}
         error={errors.password}
       />

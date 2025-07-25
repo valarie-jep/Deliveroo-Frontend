@@ -7,18 +7,18 @@ import {
   useLocation 
 } from "react-router-dom";
 import { Provider } from "react-redux";
+import { useSelector } from "react-redux";
 
-import LoginPage from "./components/LoginPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./components/RegisterPage.jsx";
 import CreateParcelPage from "./pages/CreateParcelPage.jsx";
 import Dashboard from "./pages/Dashboard";
 
 import Parcels from "./pages/Parcels.jsx"
+import Admin from "./pages/Admin.jsx";
 import store from './redux/store';
 
 // Placeholder components if not implemented
-
-const Admin = () => <div>Admin Page</div>;
 
 
 const AuthWrapper = ({ children }) => {
@@ -30,6 +30,17 @@ const AuthWrapper = ({ children }) => {
   ) : (
     <Navigate to="/login" replace state={{ from: location }} />
   );
+};
+
+const UserOnlyRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
+  const isAdmin = user && JSON.parse(user).admin;
+  const location = useLocation();
+  if (!token || isAdmin) {
+    return <Navigate to="/dashboard" replace state={{ from: location }} />;
+  }
+  return children;
 };
 
 const App = () => {
@@ -50,9 +61,9 @@ const App = () => {
           <Route
             path="/parcels"
             element={
-              
+              <UserOnlyRoute>
                 <Parcels />
-              
+              </UserOnlyRoute>
             }
           />
           <Route

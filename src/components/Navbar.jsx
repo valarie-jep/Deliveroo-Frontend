@@ -1,9 +1,20 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { logout } from '../redux/authSlice';
 
 function Navbar() {
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  };
+  const isAdmin = user && user.admin;
+  const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
 
   return (
     <nav className="bg-white shadow-md fixed w-full z-50">
@@ -22,12 +33,15 @@ function Navbar() {
             >
               Home
             </Link>
-            <Link
-              to="/parcels"
-              className="hover:text-orange-500 transition duration-300"
-            >
-              My Parcels
-            </Link>
+            {/* My Parcels: Only show for normal users and not on dashboard/landing page */}
+            {user && !isAdmin && !isDashboard && (
+              <Link
+                to="/parcels"
+                className="hover:text-orange-500 transition duration-300"
+              >
+                My Parcels
+              </Link>
+            )}
 
             {/* Show if NOT logged in */}
             {!user && (
@@ -49,12 +63,20 @@ function Navbar() {
 
             {/* Show if logged in */}
             {user && (
-              <Link
-                to="/profile"
-                className="px-4 py-2 border border-orange-500 text-orange-500 rounded-md hover:bg-orange-100 hover:shadow transition font-semibold"
-              >
-                👤 {user.name?.split(" ")[0] || "Profile"}
-              </Link>
+              <>
+                <Link
+                  to="/profile"
+                  className="px-4 py-2 border border-orange-500 text-orange-500 rounded-md hover:bg-orange-100 hover:shadow transition font-semibold"
+                >
+                  👤 {user.name?.split(" ")[0] || "Profile"}
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="ml-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition font-semibold"
+                >
+                  Log Out
+                </button>
+              </>
             )}
 
             <Link

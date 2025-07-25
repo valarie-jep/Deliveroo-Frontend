@@ -2,15 +2,13 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { loginUser } from "../redux/authSlice";
-import LoginForm from "./auth/LoginForm";
+import LoginForm from "../components/auth/LoginForm";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const from = location.state?.from?.pathname || "/dashboard";
 
   const { loading, error, token , user} = useSelector((state) => state.auth);
 
@@ -26,16 +24,16 @@ const LoginPage = () => {
 
   // ✅ Redirect after successful login
  useEffect(() => {
-  console.log("token:", token);
-  console.log("user:", user);
+  if (error) {
+  }
   if (token && user) {
     if (user.admin) {
-      navigate(from || "/", { replace: true });
+      navigate("/admin", { replace: true });
     } else {
-      navigate(from || "/dashboard", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }
-}, [token, user, navigate, from]);
+}, [token, user, navigate, error]);
 
 
 
