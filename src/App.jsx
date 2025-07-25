@@ -79,9 +79,7 @@ const App = () => {
           <Route
             path="/parcels/new"
             element={
-              
                 <CreateParcelPage />
-             
             }
           />
           <Route
