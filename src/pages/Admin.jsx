@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
+
 // import Footer from '../components/Footer'; // Footer removed for admin
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -312,10 +312,13 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      <Navbar />
+      
       <div className="flex flex-1 pt-16">
         {/* Sidebar */}
         <aside className="w-64 bg-white shadow-lg hidden md:block">
+          <div className="flex-shrink-0 text-2xl font-bold text-orange-500">
+            <Link to="/dashboard">📦 Deliveroo</Link>
+          </div>
           <div className="p-6 border-b">
             <h2 className="text-xl font-bold text-orange-500">Admin Panel</h2>
           </div>
