@@ -2,7 +2,8 @@ import { useState } from "react";
 import RegisterForm from "./auth/RegisterForm";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { registerUser } from "../redux/authSlice"; 
+import { registerUser } from "../redux/authSlice";
+import Navbar from './Navbar';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -62,13 +63,16 @@ const RegisterPage = () => {
   };
 
   return (
-    <RegisterForm
-      formData={formData}
-      handleChange={handleChange}
-      handleSubmit={handleSubmit}
-      errors={errors}
-      isLoading={isLoading}
-    />
+    <>
+      <Navbar />
+      <RegisterForm
+        formData={formData}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        errors={errors}
+        isLoading={isLoading}
+      />
+    </>
   );
 };
 

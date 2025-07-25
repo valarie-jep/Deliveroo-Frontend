@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { loginUser } from "../redux/authSlice";
 import LoginForm from "../components/auth/LoginForm";
+import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
@@ -30,7 +31,7 @@ const LoginPage = () => {
     if (user.admin) {
       navigate("/admin", { replace: true });
     } else {
-      navigate("/dashboard", { replace: true });
+      navigate("/parcels", { replace: true });
     }
   }
 }, [token, user, navigate, error]);
@@ -38,13 +39,16 @@ const LoginPage = () => {
 
 
   return (
-    <LoginForm
-      formData={formData}
-      handleChange={handleChange}
-      handleSubmit={handleSubmit}
-      errors={error ? { general: error } : {}}
-      isLoading={loading}
-    />
+    <>
+      <Navbar />
+      <LoginForm
+        formData={formData}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        errors={error ? { general: error } : {}}
+        isLoading={loading}
+      />
+    </>
   );
 };
 
