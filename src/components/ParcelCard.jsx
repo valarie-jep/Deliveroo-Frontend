@@ -1,7 +1,27 @@
 import React from 'react';
 import { FaMapMarkerAlt, FaUser, FaPhoneAlt, FaBox, FaClock, FaMapPin } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
+
+
 
 const ParcelCard = ({ parcel }) => {
+  const { user } = useSelector((state) => state.auth);
+
+  const handleCancel = (id) => {
+    console.log("Cancel Parcel:", id);
+  };
+
+  const handleChangeDestination = (id) => {
+    console.log("Change destination for Parcel:", id);
+  };
+
+  const handleUpdateStatus = (id) => {
+    console.log("Update status for Parcel:", id);
+  };
+
+  const handleUpdateLocation = (id) => {
+    console.log("Update location for Parcel:", id);
+  };
   return (
     <div className="bg-white rounded-2xl shadow-md p-4 md:p-6 border border-gray-200 transition hover:shadow-lg">
       <div className="flex justify-between items-center mb-3">
@@ -83,7 +103,44 @@ const ParcelCard = ({ parcel }) => {
           <span>{new Date(parcel.created_at).toLocaleString()}</span>
 
         </div>
-          
+        <div className="mt-4 flex gap-3 flex-wrap">
+        {/* Cancel & Change Destination - only if not delivered and owned by user */}
+        {user && parcel.status !== 'delivered' && parcel.user_id === user.id && (
+          <>
+            <button
+              className="px-4 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+              onClick={() => handleCancel(parcel.id)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-4 py-1 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition"
+              onClick={() => handleChangeDestination(parcel.id)}
+            >
+              Change Destination
+            </button>
+          </>
+        )}
+
+        {/* Admin-only actions */}
+        {user?.admin && (
+          <>
+            <button
+              className="px-4 py-1 text-sm bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition"
+              onClick={() => handleUpdateStatus(parcel.id)}
+            >
+              Update Status
+            </button>
+            <button
+              className="px-4 py-1 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600 transition"
+              onClick={() => handleUpdateLocation(parcel.id)}
+            >
+              Update Location
+            </button>
+          </>
+        )}
+      </div>
+  
 
       </div>
     </div>
