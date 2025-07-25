@@ -1,9 +1,11 @@
 import React from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { useNavigate } from "react-router-dom";
 import { FaBox, FaMapMarkerAlt, FaTimesCircle, FaSearchLocation, FaUserPlus } from 'react-icons/fa';
 
 function Dashboard() {
+  const navigate = useNavigate();
   return (
     <div>
         <Navbar/>
@@ -28,14 +30,14 @@ function Dashboard() {
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-md transition">
-            Get Started
-          </button>
           <input
             type="text"
             placeholder="Enter Tracking ID"
             className="py-3 px-4 rounded-md border border-gray-300 text-black w-64"
           />
+          <button onClick={() => navigate('/tracking')}className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-md transition">
+            Track package
+          </button>
         </div>
 
         {/* Metrics */}
@@ -110,8 +112,8 @@ function Dashboard() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="bg-gray-50 py-20 px-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-center">
+      <section id='how'className="bg-gray-50 py-20 px-6">
+        <h1  className="text-3xl md:text-4xl font-bold text-center">
           How It <span className="text-orange-500">Works</span>
         </h1>
         <p className="text-center text-gray-600 mt-4 mb-12">
@@ -158,7 +160,7 @@ function Dashboard() {
           <p className="text-gray-600 mb-4">
             Join thousands of businesses and individuals who trust Deliveroo for their shipping needs.
           </p>
-          <button className="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition font-medium">
+          <button onClick={() => navigate('/register')}className="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition font-medium">
             Create Your Account Now
           </button>
         </div>

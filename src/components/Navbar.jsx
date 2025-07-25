@@ -29,6 +29,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
+              <Link to="/" className={styles.link}>Home</Link>
               <Link to="/parcels" className={styles.link}>My Parcels</Link>
               <Link to="/profile" className={styles.link}>Profile</Link>
               <button onClick={handleLogout} className={styles.link} style={{background: 'none', border: 'none', cursor: 'pointer', padding: 0}}>Logout</button>
