@@ -42,6 +42,15 @@ function Navbar() {
                 My Parcels
               </Link>
             )}
+            {/* Create Parcel: Only show for normal users who are logged in and not on admin */}
+            {user && !user.admin && (
+              <Link
+                to="/parcels/new"
+                className="hover:text-orange-500 transition duration-300"
+              >
+                Create Parcel
+              </Link>
+            )}
 
             {/* Show if NOT logged in */}
             {!user && (
