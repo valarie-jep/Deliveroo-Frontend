@@ -17,7 +17,7 @@ const Navbar = () => {
   return (
     <nav className={styles.navbar}>
       <div className={styles.navContent}>
-        <div className={styles.logo}>Deliveroo</div>
+        <Link to="/" className={styles.logo}>Deliveroo</Link>
         <div className={styles.links}>
           {!user ? (
             <>
