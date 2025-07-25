@@ -123,7 +123,7 @@ const ParcelCard = ({ parcel }) => {
         {/* Action Buttons */}
         <div className="mt-4 flex gap-3 flex-wrap">
           {/* Cancel & Change Destination - only if not delivered and owned by user */}
-          {user && parcel.status !== 'delivered' && parcel.user_id === user.id && (
+          { (
             <>
               <button
                 className="px-4 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition"
@@ -141,7 +141,7 @@ const ParcelCard = ({ parcel }) => {
           )}
 
           {/* Admin-only actions */}
-          {user?.admin && (
+          {(
             <>
               <button
                 className="px-4 py-1 text-sm bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition"
