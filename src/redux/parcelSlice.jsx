@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 
-const BASE_URL = 'https://deliveroo-server.onrender.com/';
+const BASE_URL = 'https://deliveroo-server.onrender.com';
 
 
 // Helper to get auth token
@@ -101,7 +101,7 @@ const parcelSlice = createSlice({
         state.error = null;
       })
       .addCase(getParcels.fulfilled, (state, action) => {
-        state.list = action.payload;
+        state.list = action.payload.parcels || [];
         state.loading = false;
       })
       .addCase(getParcels.rejected, (state, action) => {

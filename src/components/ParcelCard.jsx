@@ -81,7 +81,10 @@ const ParcelCard = ({ parcel }) => {
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <FaClock />
           <span>{new Date(parcel.created_at).toLocaleString()}</span>
+
         </div>
+          
+
       </div>
     </div>
   );
