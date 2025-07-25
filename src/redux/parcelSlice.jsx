@@ -17,7 +17,7 @@ const getAuthHeaders = (thunkAPI) => {
 export const getParcels = createAsyncThunk(
   'parcels/getParcels',
   async (_, thunkAPI) => {
-    const res = await axios.get(`${BASE_URL}/parcels`, getAuthHeaders(thunkAPI));
+    const res = await axios.get(`${BASE_URL}/parcels?per_page=100`, getAuthHeaders(thunkAPI));
     return res.data;
   }
 );

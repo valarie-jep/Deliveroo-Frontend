@@ -7,7 +7,8 @@ import Navbar from '../components/Navbar';
 const Parcels = () => {
   const dispatch = useDispatch();
   const parcelsState = useSelector(state => state.parcels) || {};
-const { list = [], loading = false, error = null } = parcelsState;
+  const user = useSelector(state => state.auth.user);
+  const { list = [], loading = false, error = null } = parcelsState;
 
   useEffect(() => {
     dispatch(getParcels());
@@ -16,13 +17,16 @@ const { list = [], loading = false, error = null } = parcelsState;
   if (loading) return <p className="text-center mt-6">Loading parcels...</p>;
   if (error) return <p className="text-center mt-6 text-red-500">Error: {error}</p>;
   if (!Array.isArray(list)) {
-  return <p className="text-red-600">Parcel data is invalid</p>;
-}
+    return <p className="text-red-600">Parcel data is invalid</p>;
+  }
+
+  // Filter parcels to only show those belonging to the logged-in user
+  const filteredList = user ? list.filter(parcel => parcel.user_id === user.id) : [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
       <Navbar/>
-      {list.map(parcel => (
+      {filteredList.map(parcel => (
         <ParcelCard key={parcel.id} parcel={parcel} />
       ))}
     </div>

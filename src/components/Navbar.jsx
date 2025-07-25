@@ -1,4 +1,5 @@
 import React from 'react';
+<<<<<<< HEAD
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../redux/authSlice';
@@ -40,6 +41,15 @@ function Navbar() {
                 className="hover:text-orange-500 transition duration-300"
               >
                 My Parcels
+              </Link>
+            )}
+            {/* Create Parcel: Only show for normal users who are logged in and not on admin */}
+            {user && !user.admin && (
+              <Link
+                to="/parcels/new"
+                className="hover:text-orange-500 transition duration-300"
+              >
+                Create Parcel
               </Link>
             )}
 
@@ -93,3 +103,22 @@ function Navbar() {
 }
 
 export default Navbar;
+=======
+import { Link } from 'react-router-dom';
+import styles from './Navbar.module.css';
+
+const Navbar = () => (
+  <nav className={styles.navbar}>
+    <div className={styles.logo}>Deliveroo</div>
+    <div className={styles.links}>
+      <Link to="/" className={styles.link}>Home</Link>
+      <a href="#how" className={styles.link}>How it Works</a>
+      <a href="#pricing" className={styles.link}>Pricing</a>
+      <Link to="/login" className={styles.link}>Login</Link>
+      <Link to="/register" className={styles.link}>Register</Link>
+    </div>
+  </nav>
+);
+
+export default Navbar;
+>>>>>>> 16b1f87d15afffc9ab533233379ee6ea1eea971d
