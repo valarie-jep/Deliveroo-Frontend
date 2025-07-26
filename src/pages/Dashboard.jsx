@@ -12,7 +12,7 @@ function Dashboard() {
        <section
       className="relative bg-cover bg-center h-screen flex items-center justify-center text-white px-6"
       style={{
-        backgroundImage: "url('https://www.pexels.com/photo/person-holding-a-cellphone-and-parcel-7362883/')" 
+        backgroundImage: "url('https://images.pexels.com/photos/7362883/pexels-photo-7362883.jpeg')" 
       }}
     >
       {/* Overlay */}
@@ -30,11 +30,6 @@ function Dashboard() {
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <input
-            type="text"
-            placeholder="Enter Tracking ID"
-            className="py-3 px-4 rounded-md border border-gray-300 text-black w-64"
-          />
           <button onClick={() => navigate('/tracking')}className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-md transition">
             Track package
           </button>
