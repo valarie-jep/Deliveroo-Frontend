@@ -19,6 +19,7 @@ import store from './redux/store';
 import ParcelDetails from "./pages/ParcelDetails.jsx";
 import TrackingPage from "./pages/TrackingPage.jsx";
 import Profile from "./pages/Profile.jsx"
+import NotFoundPage from "./pages/NotFoundPage.jsx";
 // Placeholder components if not implemented
 
 
@@ -109,7 +110,10 @@ const App = () => {
                 <Profile />
               </AuthWrapper>
             } />
+
+            <Route path="/404" element={<NotFoundPage/>} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
