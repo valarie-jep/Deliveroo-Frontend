@@ -30,11 +30,6 @@ function Dashboard() {
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <input
-            type="text"
-            placeholder="Enter Tracking ID"
-            className="py-3 px-4 rounded-md border border-gray-300 text-black w-64"
-          />
           <button onClick={() => navigate('/tracking')}className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-md transition">
             Track package
           </button>
