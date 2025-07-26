@@ -202,13 +202,17 @@ const AdminParcels = () => {
                 <td className="py-2 px-4">{parcel.status}</td>
                 <td className="py-2 px-4">{parcel.current_location || '-'}</td>
                 <td className="py-2 px-4">
-                  <input
-                    type="text"
-                    placeholder="New status"
+                  <select
                     className="border px-2 py-1 rounded mr-2"
                     value={statusUpdate[parcel.id] || ''}
                     onChange={e => setStatusUpdate(prev => ({ ...prev, [parcel.id]: e.target.value }))}
-                  />
+                  >
+                    <option value="">Select Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_transit">In Transit</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
                   <button
                     className="bg-orange-500 text-white px-2 py-1 rounded"
                     onClick={() => handleStatusChange(parcel.id)}
@@ -239,6 +243,10 @@ const AdminParcels = () => {
     </div>
   );
 };
+
+// Remaining code unchanged
+// ...
+
 
 // Admin Histories Page
 const AdminHistories = () => {
@@ -312,13 +320,13 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      
+      <div className="flex-shrink-0 text-4xl font-bold text-orange-500">
+            <Link to="/dashboard">📦 Deliveroo</Link>
+          </div>
       <div className="flex flex-1 pt-16">
         {/* Sidebar */}
         <aside className="w-64 bg-white shadow-lg hidden md:block">
-          <div className="flex-shrink-0 text-2xl font-bold text-orange-500">
-            <Link to="/dashboard">📦 Deliveroo</Link>
-          </div>
+          
           <div className="p-6 border-b">
             <h2 className="text-xl font-bold text-orange-500">Admin Panel</h2>
           </div>
