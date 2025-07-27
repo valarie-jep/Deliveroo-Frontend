@@ -3,7 +3,6 @@ import axios from 'axios';
 
 const BASE_URL = 'https://deliveroo-server.onrender.com';
 
-// Restore from localStorage
 const tokenFromStorage = localStorage.getItem('token');
 const userFromStorage = localStorage.getItem('user');
 

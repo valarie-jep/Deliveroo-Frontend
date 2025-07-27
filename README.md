@@ -1,70 +1,317 @@
-# Getting Started with Create React App
+# Deliveroo Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern React-based delivery tracking application that allows users to create, track, and manage parcel deliveries with real-time Google Maps integration.
 
-## Available Scripts
+## Table of Contents
 
-In the project directory, you can run:
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Environment Setup](#environment-setup)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [API Integration](#api-integration)
+- [Google Maps Setup](#google-maps-setup)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Core Functionality
+- **User Authentication**: Secure login/register system with JWT tokens
+- **Parcel Management**: Create, view, and track parcels
+- **Real-time Tracking**: Live GPS tracking with Google Maps integration
+- **Location Autocomplete**: Smart address suggestions using Google Places API
+- **Admin Dashboard**: Comprehensive admin panel for parcel management
+- **Responsive Design**: Mobile-first design with Tailwind CSS
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### User Features
+- Create new delivery parcels with pickup and destination details
+- Real-time parcel tracking with map visualization
+- View parcel history and status updates
+- Edit parcel destinations (before pickup)
+- Cancel parcels (before pickup)
+- User profile management
 
-### `npm test`
+### Admin Features
+- View all parcels in the system
+- Update parcel status (pending, in-transit, delivered, cancelled)
+- Update parcel locations for real-time tracking
+- Manage user accounts and permissions
+- Comprehensive admin dashboard with statistics
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Tech Stack
 
-### `npm run build`
+### Frontend
+- **React 18.2.0** - Modern UI library
+- **Redux Toolkit** - State management
+- **React Router DOM** - Client-side routing
+- **Tailwind CSS** - Utility-first CSS framework
+- **Axios** - HTTP client for API requests
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Maps & Location
+- **@react-google-maps/api** - Google Maps integration
+- **Google Places API** - Address autocomplete
+- **Google Geocoding API** - Address to coordinates conversion
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Development Tools
+- **Create React App** - Development environment
+- **Jest** - Testing framework
+- **React Testing Library** - Component testing
+- **ESLint** - Code linting
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Prerequisites
 
-### `npm run eject`
+Before running this application, make sure you have:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- **Node.js** (v16 or higher)
+- **npm** or **yarn** package manager
+- **Google Maps API Key** (see [Google Maps Setup](#google-maps-setup))
+- **Backend API** running (see API Integration section)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Installation
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Deliveroo-Frontend
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Then edit `.env` with your configuration (see [Environment Setup](#environment-setup))
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+4. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The application will be available at `http://localhost:3000`
 
-### Code Splitting
+## Environment Setup
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Create a `.env` file in the root directory with the following variables:
 
-### Analyzing the Bundle Size
+```env
+# Google Maps API Key
+REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+# Backend API URL
+REACT_APP_API_URL=https://deliveroo-server.onrender.com
+```
 
-### Making a Progressive Web App
+### Required API Keys
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+#### Google Maps API
+You'll need to enable the following Google Maps APIs:
+- **Maps JavaScript API** - For map display
+- **Places API** - For address autocomplete
+- **Geocoding API** - For address to coordinate conversion
 
-### Advanced Configuration
+See [Google Maps Setup](#google-maps-setup) for detailed instructions.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Usage
 
-### Deployment
+### User Flow
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+1. **Registration/Login**
+   - Visit the application and create an account
+   - Login with your credentials
 
-### `npm run build` fails to minify
+2. **Create Parcel**
+   - Navigate to "Create New Parcel"
+   - Fill in pickup and destination details
+   - Use location autocomplete for accurate addresses
+   - Submit the parcel creation form
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+3. **Track Parcel**
+   - Use the tracking page to monitor your parcel
+   - View real-time location on Google Maps
+   - Check status updates and delivery progress
+
+4. **Manage Parcels**
+   - View all your parcels in the parcels list
+   - Edit destinations (before pickup)
+   - Cancel parcels (before pickup)
+
+### Admin Flow
+
+1. **Admin Login**
+   - Login with admin credentials
+   - Access the admin dashboard
+
+2. **Manage Parcels**
+   - View all parcels in the system
+   - Update parcel status and locations
+   - Monitor delivery progress
+
+3. **User Management**
+   - View user accounts and permissions
+   - Manage system-wide settings
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── auth/           # Authentication components
+│   ├── LocationAutocomplete.jsx
+│   ├── Navbar.jsx
+│   ├── Footer.jsx
+│   ├── ParcelCard.jsx
+│   └── ParcelForm.jsx
+├── pages/              # Page components
+│   ├── Landing.jsx     # Landing page
+│   ├── LoginPage.jsx   # User authentication
+│   ├── Dashboard.jsx   # User dashboard
+│   ├── Parcels.jsx     # Parcel listing
+│   ├── CreateParcelPage.jsx
+│   ├── ParcelDetails.jsx
+│   ├── TrackingPage.jsx
+│   ├── Admin.jsx       # Admin dashboard
+│   ├── Profile.jsx     # User profile
+│   └── NotFoundPage.jsx
+├── redux/              # State management
+│   ├── store.jsx       # Redux store configuration
+│   ├── authSlice.jsx   # Authentication state
+│   └── parcelSlice.jsx # Parcel management state
+├── App.jsx             # Main application component
+├── index.jsx           # Application entry point
+└── index.css           # Global styles
+```
+
+## API Integration
+
+The application integrates with a backend API for data management:
+
+### Base URL
+```
+https://deliveroo-server.onrender.com
+```
+
+### Key Endpoints
+- `POST /login` - User authentication
+- `POST /register` - User registration
+- `GET /parcels` - Fetch user parcels
+- `POST /parcels` - Create new parcel
+- `PATCH /parcels/{id}/destination` - Update parcel destination
+- `PATCH /parcels/{id}/cancel` - Cancel parcel
+- `PATCH /parcels/{id}/status` - Update parcel status (admin)
+- `PATCH /parcels/{id}/location` - Update parcel location (admin)
+
+### Authentication
+- Uses JWT tokens for authentication
+- Tokens stored in localStorage
+- Automatic token refresh and logout handling
+
+## Google Maps Setup
+
+### 1. Create Google Cloud Project
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable billing for the project
+
+### 2. Enable Required APIs
+Enable these APIs in your Google Cloud Console:
+- **Maps JavaScript API**
+- **Places API**
+- **Geocoding API**
+
+### 3. Create API Key
+1. Go to "Credentials" in Google Cloud Console
+2. Click "Create Credentials" → "API Key"
+3. Restrict the key to your domain for security
+4. Copy the API key to your `.env` file
+
+### 4. Configure Restrictions
+For security, configure API key restrictions:
+- **Application restrictions**: HTTP referrers
+- **API restrictions**: Select only the APIs you need
+
+## Testing
+
+### Run Tests
+```bash
+npm test
+```
+
+### Test Coverage
+```bash
+npm test -- --coverage
+```
+
+### Testing Framework
+- **Jest** - Test runner
+- **React Testing Library** - Component testing utilities
+- **@testing-library/jest-dom** - Custom matchers
+
+## Deployment
+
+### Build for Production
+```bash
+npm run build
+```
+
+### Deploy Options
+
+#### Netlify
+1. Connect your GitHub repository
+2. Set build command: `npm run build`
+3. Set publish directory: `build`
+4. Add environment variables in Netlify dashboard
+
+#### Vercel
+1. Install Vercel CLI: `npm i -g vercel`
+2. Run: `vercel`
+3. Follow the prompts
+
+#### GitHub Pages
+1. Add `homepage` field to `package.json`
+2. Install gh-pages: `npm install --save-dev gh-pages`
+3. Add deploy scripts to `package.json`
+4. Run: `npm run deploy`
+
+### Environment Variables
+Make sure to set all required environment variables in your deployment platform:
+- `REACT_APP_GOOGLE_MAPS_API_KEY`
+- `REACT_APP_API_URL`
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes
+4. Add tests for new functionality
+5. Commit your changes: `git commit -m 'Add feature'`
+6. Push to the branch: `git push origin feature-name`
+7. Submit a pull request
+
+### Code Style
+- Use ESLint for code linting
+- Follow React best practices
+- Write meaningful commit messages
+- Add tests for new features
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the [Google Maps Setup Guide](GOOGLE_MAPS_SETUP.md)
+- Review the API documentation
+
+---
+
+**Built with React, Redux, and Google Maps API**

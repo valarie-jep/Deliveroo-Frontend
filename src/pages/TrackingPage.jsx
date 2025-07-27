@@ -23,7 +23,6 @@ const TrackingPage = () => {
   const location = useLocation();
   const parcels = useSelector((state) => state.parcels.list);
 
-  // Check if Google Maps API key is available
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
   const hasValidApiKey = googleMapsApiKey && googleMapsApiKey !== 'your_google_maps_api_key_here';
 
@@ -65,7 +64,6 @@ const TrackingPage = () => {
       return center;
     }
     
-    // Check if location is already in coordinate format (contains comma and numbers)
     if (location.includes(',') && /^-?\d+\.?\d*,-?\d+\.?\d*$/.test(location)) {
       const [lat, lng] = location
         .split(",")
@@ -77,14 +75,11 @@ const TrackingPage = () => {
       return { lat, lng };
     }
     
-    // If location is text (like "Westgate Mall"), use default center
     console.warn("Invalid coordinates:", location);
     return center;
   };
 
-  // Use pickup location for map display
   const getMapLocation = (parcel) => {
-    // First try current_location, then pickup_location_text, then default center
     return parcel.current_location || parcel.pickup_location_text || null;
   };
 
@@ -153,7 +148,6 @@ const TrackingPage = () => {
               </p>
             </div>
             
-            {/* Map Section */}
             <div className="border rounded-lg overflow-hidden">
               {!hasValidApiKey ? (
                 <div className="h-96 flex items-center justify-center bg-gray-100">

@@ -20,8 +20,6 @@ import ParcelDetails from "./pages/ParcelDetails.jsx";
 import TrackingPage from "./pages/TrackingPage.jsx";
 import Profile from "./pages/Profile.jsx"
 import NotFoundPage from "./pages/NotFoundPage.jsx";
-// Placeholder components if not implemented
-
 
 const AuthWrapper = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -81,40 +79,45 @@ const App = () => {
           <Route
             path="/parcels/new"
             element={
+              <UserOnlyRoute>
                 <CreateParcelPage />
+              </UserOnlyRoute>
             }
           />
           <Route
             path="/parcels/:id"
-            element={<ParcelDetails />}
+            element={
+              <UserOnlyRoute>
+                <ParcelDetails />
+              </UserOnlyRoute>
+            }
           />
           <Route
-            path="/admin/*"
+            path="/tracking"
+            element={
+              <UserOnlyRoute>
+                <TrackingPage />
+              </UserOnlyRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <UserOnlyRoute>
+                <Profile />
+              </UserOnlyRoute>
+            }
+          />
+          <Route
+            path="/admin"
             element={
               <AuthWrapper>
                 <Admin />
               </AuthWrapper>
             }
           />
-          <Route 
-          path="/tracking" 
-          element={
-            <AuthWrapper>
-                <TrackingPage />
-              </AuthWrapper>
-            } />
-          <Route 
-          path="/profile" 
-          element={
-            <AuthWrapper>
-                <Profile />
-              </AuthWrapper>
-            } />
-
-            <Route path="/404" element={<NotFoundPage/>} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
     </Provider>

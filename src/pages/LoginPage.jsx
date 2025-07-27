@@ -13,7 +13,6 @@ const LoginPage = () => {
 
   const { loading, error, token, user } = useSelector((state) => state.auth);
 
-  // 🧠 Get the original page user tried to visit
   const from = location.state?.from?.pathname || (user?.admin ? "/admin" : "/parcels");
 
   const handleChange = (e) => {
@@ -26,7 +25,6 @@ const LoginPage = () => {
     dispatch(loginUser(formData));
   };
 
-  // ✅ Redirect after successful login
   useEffect(() => {
     if (token && user) {
       navigate(from, { replace: true });

@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from './Landing.module.css';
 
-// SVG icon components
 const BoxIcon = () => (
   <span className={styles.iconCircle}>
     <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#FF5A1F" strokeWidth="2">
@@ -74,7 +73,7 @@ const features = [
   {
     icon: <DocIcon />,
     title: 'Real-Time Order Details',
-    desc: 'Get notified instantly about your order’s progress and delivery status.'
+    desc: 'Get notified instantly about your order\'s progress and delivery status.'
   },
 ];
 
@@ -108,7 +107,6 @@ const testimonials = [
 
 const Landing = () => (
   <div className={styles.root}>
-    {/* Hero Section */}
     <div className={`${styles.hero} ${styles.fadeIn}`}>
       <div className={styles.heroOverlay}></div>
       <div className={styles.heroContent}>
@@ -121,11 +119,10 @@ const Landing = () => (
       </div>
     </div>
 
-    {/* Why Choose Section */}
     <section className={`${styles.section} ${styles.slideUp}`}>
       <div className={styles.sectionInner}>
         <h2 className={styles.sectionTitle}>Why Choose <span className={styles.orange}>Deliveroo?</span></h2>
-        <p className={styles.sectionDesc}>Safe, fast, and reliable. Here’s why thousands trust us for their deliveries:</p>
+        <p className={styles.sectionDesc}>Safe, fast, and reliable. Here's why thousands trust us for their deliveries:</p>
         <div className={styles.featuresGrid}>
           {features.map((f, i) => (
             <div key={i} className={`${styles.featureCard} ${styles.fadeIn}`}> 
@@ -138,7 +135,6 @@ const Landing = () => (
       </div>
     </section>
 
-    {/* How it Works Section */}
     <section className={`${styles.section} ${styles.sectionGray} ${styles.slideUp}`}>
       <div className={styles.sectionInner}>
         <h2 className={styles.sectionTitle}>How it <span className={styles.orange}>Works</span></h2>
@@ -154,7 +150,6 @@ const Landing = () => (
       </div>
     </section>
 
-    {/* Trusted by Thousands Section */}
     <section className={`${styles.section} ${styles.slideUp}`}>
       <div className={styles.sectionInner}>
         <h2 className={styles.sectionTitle}>Trusted by <span className={styles.orange}>Thousands</span></h2>
@@ -190,7 +185,6 @@ const Landing = () => (
       </div>
     </section>
 
-    {/* Call to Action Section */}
     <section className={`${styles.ctaSection} ${styles.slideUp}`}>
       <div className={styles.sectionInner}>
         <h3 className={styles.ctaTitle}>Ready to Get Started?</h3>

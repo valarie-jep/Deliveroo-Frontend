@@ -14,7 +14,6 @@ const LocationAutocomplete = ({
   const placesService = useRef(null);
 
   useEffect(() => {
-    // Initialize Google Places services
     if (window.google && window.google.maps) {
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       placesService.current = new window.google.maps.places.PlacesService(
@@ -33,12 +32,11 @@ const LocationAutocomplete = ({
     onChange(newValue);
 
     if (newValue.length > 2 && autocompleteService.current) {
-      // Get place predictions
       autocompleteService.current.getPlacePredictions(
         {
           input: newValue,
-          componentRestrictions: { country: 'ke' }, // Restrict to Kenya
-          types: ['establishment', 'geocode'] // Include businesses and addresses
+          componentRestrictions: { country: 'ke' },
+          types: ['establishment', 'geocode']
         },
         (predictions, status) => {
           if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
@@ -74,7 +72,6 @@ const LocationAutocomplete = ({
   };
 
   const handleInputBlur = () => {
-    // Delay hiding suggestions to allow clicking on them
     setTimeout(() => {
       setShowSuggestions(false);
     }, 200);
