@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createParcel } from '../redux/parcelSlice';
+import LocationAutocomplete from './LocationAutocomplete';
 
 const ParcelForm = ({ setSuccess }) => {
   const dispatch = useDispatch();
@@ -56,11 +57,27 @@ const ParcelForm = ({ setSuccess }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block font-medium mb-1">Pickup Location</label>
-          <input type="text" value={pickup} onChange={e => setPickup(e.target.value)} required className="w-full border rounded px-3 py-2" />
+          <LocationAutocomplete
+            value={pickup}
+            onChange={setPickup}
+            placeholder="Start typing to search locations..."
+            className="w-full"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Type to see suggestions from Google Maps
+          </p>
         </div>
         <div>
           <label className="block font-medium mb-1">Destination</label>
-          <input type="text" value={destination} onChange={e => setDestination(e.target.value)} required className="w-full border rounded px-3 py-2" />
+          <LocationAutocomplete
+            value={destination}
+            onChange={setDestination}
+            placeholder="Start typing to search locations..."
+            className="w-full"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Type to see suggestions from Google Maps
+          </p>
         </div>
         <div>
           <label className="block font-medium mb-1">Description</label>

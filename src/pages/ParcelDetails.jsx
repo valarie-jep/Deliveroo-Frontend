@@ -25,6 +25,7 @@ const ParcelDetails = () => {
       <Navbar />
       <div className="max-w-xl mx-auto mt-16 p-6 bg-white rounded shadow">
         <h2 className="text-2xl font-bold mb-4 text-indigo-600">Parcel #{parcel.id} Details</h2>
+
         <div className="space-y-2 text-gray-800">
           <div><span className="font-semibold">Status:</span> {parcel.status}</div>
           <div><span className="font-semibold">Sender:</span> {parcel.sender_name} ({parcel.sender_phone_number})</div>
@@ -38,7 +39,21 @@ const ParcelDetails = () => {
           <div><span className="font-semibold">Distance:</span> {parcel.distance?.toFixed(2)} km</div>
           <div><span className="font-semibold">Created At:</span> {new Date(parcel.created_at).toLocaleString()}</div>
         </div>
-        <button onClick={() => navigate('/parcels')} className="mt-6 px-4 py-2 bg-blue-500 text-white rounded">Back to My Parcels</button>
+
+        <div className="flex gap-3 mt-6">
+          <button 
+            onClick={() => navigate('/parcels')} 
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+          >
+            Back to My Parcels
+          </button>
+          <button 
+            onClick={() => navigate(`/tracking`, { state: { trackingId: parcel.id } })} 
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+          >
+            Track Parcel
+          </button>
+        </div>
       </div>
     </div>
   );

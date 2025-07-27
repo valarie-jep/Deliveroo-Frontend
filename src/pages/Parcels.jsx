@@ -63,7 +63,7 @@ const ParcelCard = ({ parcel }) => {
         >
           Track
         </button>
-        {parcel.status !== "cancelled" && parcel.status!=="delivered"&& (
+        {parcel.status !== "cancelled" && parcel.status !== "delivered" && (
           <button
             onClick={handleCancel}
             disabled={loading}

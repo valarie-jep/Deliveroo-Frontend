@@ -18,9 +18,14 @@ const TrackingPage = () => {
   const [trackingId, setTrackingId] = useState("");
   const [parcel, setParcel] = useState(null);
   const [error, setError] = useState(null);
+  const [mapError, setMapError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const parcels = useSelector((state) => state.parcels.list);
+
+  // Check if Google Maps API key is available
+  const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+  const hasValidApiKey = googleMapsApiKey && googleMapsApiKey !== 'your_google_maps_api_key_here';
 
   useEffect(() => {
     if (location.state?.trackingId) {
@@ -42,6 +47,7 @@ const TrackingPage = () => {
     e.preventDefault();
     setError(null);
     setParcel(null);
+    setMapError(null);
 
     const foundParcel = parcels.find(
       (p) => String(p.id) === String(trackingId)
@@ -58,14 +64,43 @@ const TrackingPage = () => {
       console.warn("No location provided, using default center");
       return center;
     }
-    const [lat, lng] = location
-      .split(",")
-      .map((coord) => parseFloat(coord.trim()));
-    if (isNaN(lat) || isNaN(lng)) {
-      console.warn("Invalid coordinates:", location);
-      return center;
+    
+    // Check if location is already in coordinate format (contains comma and numbers)
+    if (location.includes(',') && /^-?\d+\.?\d*,-?\d+\.?\d*$/.test(location)) {
+      const [lat, lng] = location
+        .split(",")
+        .map((coord) => parseFloat(coord.trim()));
+      if (isNaN(lat) || isNaN(lng)) {
+        console.warn("Invalid coordinates:", location);
+        return center;
+      }
+      return { lat, lng };
     }
-    return { lat, lng };
+    
+    // If location is text (like "Westgate Mall"), use default center
+    console.warn("Invalid coordinates:", location);
+    return center;
+  };
+
+  // Use pickup location for map display
+  const getMapLocation = (parcel) => {
+    // First try current_location, then pickup_location_text, then default center
+    return parcel.current_location || parcel.pickup_location_text || null;
+  };
+
+  const handleMapLoad = () => {
+    console.log("Map loaded successfully");
+    setMapError(null);
+  };
+
+  const handleMapError = (error) => {
+    console.error("Map error:", error);
+    setMapError("Failed to load map. Please check your internet connection.");
+  };
+
+  const handleScriptLoadError = (error) => {
+    console.error("LoadScript error:", error);
+    setMapError("Failed to load Google Maps. Please check your API key configuration.");
   };
 
   return (
@@ -105,30 +140,59 @@ const TrackingPage = () => {
                 <span className="font-semibold">Status:</span> {parcel.status}
               </p>
               <p>
+                <span className="font-semibold">Pickup Location:</span>{" "}
+                {parcel.pickup_location_text || "Not available"}
+              </p>
+              <p>
                 <span className="font-semibold">Current Location:</span>{" "}
-                {parcel.current_location || "Not available"}
+                {parcel.current_location || parcel.pickup_location_text || "Not available"}
               </p>
               <p>
                 <span className="font-semibold">Destination:</span>{" "}
                 {parcel.destination_location_text}
               </p>
             </div>
-            <LoadScript
-              googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-              onError={(e) => console.error("LoadScript error:", e)}
-            >
-              <GoogleMap
-                mapContainerStyle={containerStyle}
-                center={getCoordinates(parcel.current_location)}
-                zoom={12}
-                onLoad={() => console.log("Map loaded successfully")}
-                onError={(e) => console.error("Map error:", e)}
-              >
-                {parcel.current_location && (
-                  <Marker position={getCoordinates(parcel.current_location)} />
-                )}
-              </GoogleMap>
-            </LoadScript>
+            
+            {/* Map Section */}
+            <div className="border rounded-lg overflow-hidden">
+              {!hasValidApiKey ? (
+                <div className="h-96 flex items-center justify-center bg-gray-100">
+                  <div className="text-center">
+                    <p className="text-gray-600 mb-2">Google Maps API key not configured</p>
+                    <p className="text-sm text-gray-500">
+                      Please add your Google Maps API key to the .env file
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Current location: {getMapLocation(parcel) || "Not available"}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <LoadScript
+                  googleMapsApiKey={googleMapsApiKey}
+                  libraries={["places"]}
+                  onError={handleScriptLoadError}
+                >
+                  <GoogleMap
+                    mapContainerStyle={containerStyle}
+                    center={getCoordinates(getMapLocation(parcel))}
+                    zoom={12}
+                    onLoad={handleMapLoad}
+                    onError={handleMapError}
+                  >
+                    {getMapLocation(parcel) && (
+                      <Marker position={getCoordinates(getMapLocation(parcel))} />
+                    )}
+                  </GoogleMap>
+                </LoadScript>
+              )}
+              {mapError && (
+                <div className="p-4 bg-red-50 border-t border-red-200">
+                  <p className="text-red-600 text-sm">{mapError}</p>
+                </div>
+              )}
+            </div>
+            
             <button
               onClick={() => navigate(`/parcels/${parcel.id}`)}
               className="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
