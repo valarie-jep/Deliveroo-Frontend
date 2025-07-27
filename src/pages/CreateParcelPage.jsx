@@ -24,8 +24,8 @@ const CreateParcelPage = () => {
           <ParcelForm setSuccess={setSuccess} />
         </div>
       </div>
-    </div>
-  );
+  </div>
+);
 };
 
 export default CreateParcelPage; 
