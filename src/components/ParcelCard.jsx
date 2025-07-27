@@ -41,7 +41,7 @@ const ParcelCard = ({ parcel }) => {
         {/* Pickup & Destination */}
         <div className="text-sm">
           <div className="flex items-center gap-2">
-            <FaMapMarkerAlt className="text-blue-500" />
+            <FaMapMarkerAlt className="text-orange-500" />
             <span className="text-gray-600">Pickup:</span>
             <span className="font-medium">{parcel.pickup_location_text}</span>
           </div>

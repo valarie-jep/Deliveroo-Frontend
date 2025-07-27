@@ -20,6 +20,9 @@ import ParcelDetails from "./pages/ParcelDetails.jsx";
 import TrackingPage from "./pages/TrackingPage.jsx";
 import Profile from "./pages/Profile.jsx"
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import AdminParcelDetails from "./pages/AdminParcelDetails.jsx";
+// Placeholder components if not implemented
+
 
 const AuthWrapper = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -81,32 +84,12 @@ const App = () => {
             element={
               <UserOnlyRoute>
                 <CreateParcelPage />
-              </UserOnlyRoute>
+                </UserOnlyRoute>
             }
           />
           <Route
             path="/parcels/:id"
-            element={
-              <UserOnlyRoute>
-                <ParcelDetails />
-              </UserOnlyRoute>
-            }
-          />
-          <Route
-            path="/tracking"
-            element={
-              <UserOnlyRoute>
-                <TrackingPage />
-              </UserOnlyRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <UserOnlyRoute>
-                <Profile />
-              </UserOnlyRoute>
-            }
+            element={<ParcelDetails />}
           />
           <Route
             path="/admin"
@@ -116,8 +99,33 @@ const App = () => {
               </AuthWrapper>
             }
           />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<NotFoundPage />} />
+           <Route
+            path="/admin/parcels/:id"
+            element={
+              <AuthWrapper>
+                <AdminParcelDetails />
+              </AuthWrapper>
+            }
+          />
+          <Route 
+          path="/tracking" 
+          element={
+            <AuthWrapper>
+                <TrackingPage />
+              </AuthWrapper>
+            } />
+          <Route 
+          path="/profile" 
+          element={
+            <AuthWrapper>
+                <Profile />
+              </AuthWrapper>
+            } />
+
+            <Route path="/404" element={<NotFoundPage/>} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
     </Provider>
