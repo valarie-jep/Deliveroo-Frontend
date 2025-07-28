@@ -14,7 +14,7 @@ const ParcelDetails = () => {
         <Navbar />
         <div className="max-w-xl mx-auto mt-16 p-6 bg-white rounded shadow text-center">
           <h2 className="text-xl font-bold mb-4">Parcel Not Found</h2>
-          <button onClick={() => navigate('/parcels')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Back to My Parcels</button>
+          <button onClick={() => navigate('/parcels')} className="mt-4 px-4 py-2 bg-orange-500 text-white rounded">Back to My Parcels</button>
         </div>
       </div>
     );

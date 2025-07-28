@@ -35,7 +35,7 @@ const AdminParcelDetails = () => {
     <div>
       
       <div className="max-w-xl mx-auto mt-16 p-6 bg-white rounded shadow">
-        <h2 className="text-2xl font-bold mb-4 text-indigo-600">Parcel #{parcel.id} Details</h2>
+        <h2 className="text-2xl font-bold mb-4 text-orange-600">Parcel #{parcel.id} Details</h2>
         <div className="space-y-2 text-gray-800">
           <div><span className="font-semibold">Status:</span> {parcel.status}</div>
           <div><span className="font-semibold">Sender:</span> {parcel.sender_name} ({parcel.sender_phone_number})</div>
@@ -49,7 +49,7 @@ const AdminParcelDetails = () => {
           <div><span className="font-semibold">Distance:</span> {parcel.distance?.toFixed(2)} km</div>
           <div><span className="font-semibold">Created At:</span> {new Date(parcel.created_at).toLocaleString()}</div>
         </div>
-        <button onClick={() => navigate('/admin')} className="mt-6 px-4 py-2 bg-blue-500 text-white rounded">Back to Dashboard</button>
+        <button onClick={() => navigate('/admin')} className="mt-6 px-4 py-2 bg-orange-500 text-white rounded">Back to Dashboard</button>
       </div>
     </div>
   );

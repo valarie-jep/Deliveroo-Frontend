@@ -74,22 +74,25 @@ const App = () => {
           <Route
             path="/parcels"
             element={
-              <UserOnlyRoute>
+              <AuthWrapper>
                 <Parcels />
-              </UserOnlyRoute>
+              </AuthWrapper>
             }
           />
           <Route
             path="/parcels/new"
             element={
-              <UserOnlyRoute>
+              <AuthWrapper>
                 <CreateParcelPage />
-                </UserOnlyRoute>
+                </AuthWrapper>
             }
           />
           <Route
             path="/parcels/:id"
-            element={<ParcelDetails />}
+            element={
+              <AuthWrapper>
+                <ParcelDetails />
+              </AuthWrapper>}
           />
           <Route
             path="/admin"
