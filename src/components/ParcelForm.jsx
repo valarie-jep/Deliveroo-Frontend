@@ -22,7 +22,7 @@ const ParcelForm = ({ setSuccess }) => {
   const navigate=useNavigate();
 
   const validateInputs = () => {
-    const phoneRegex = /^\d{10,15}$/; // Adjust as needed
+    const phoneRegex = /^\d{10,15}$/; 
     const nameRegex = /^[a-zA-Z\s.'-]{2,}$/;
 
     if (!pickup || !destination || !senderName || !senderPhone || !recipientName || !recipientPhone) {
