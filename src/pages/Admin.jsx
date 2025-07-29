@@ -259,8 +259,8 @@ const AdminParcels = () => {
               .map((parcel) => (
               <tr key={parcel.id}
                   className="border-b cursor-pointer hover:bg-gray-100 transition"
-                  onClick={() => navigate(`/admin/parcels/${parcel.id}`)}>
-                <td className="py-2 px-4">{parcel.id}</td>
+                  >
+                <td className="py-2 px-4"onClick={() => navigate(`/admin/parcels/${parcel.id}`)}>{parcel.id}</td>
                 <td className="py-2 px-4">{parcel.sender_name || parcel.sender || '-'}</td>
                 <td className="py-2 px-4">{parcel.recipient_name || parcel.recipient || '-'}</td>
                 <td className={`py-2 px-4 font-medium ${getStatusClass(parcel.status)}`}>{parcel.status}</td>
