@@ -21,60 +21,82 @@ const ParcelForm = ({ setSuccess }) => {
   const user = useSelector((state) => state.auth.user);
   const navigate=useNavigate();
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (setSuccess) setSuccess(null);
-  setError(null);
+  const validateInputs = () => {
+    const phoneRegex = /^\d{10,15}$/; // Adjust as needed
+    const nameRegex = /^[a-zA-Z\s.'-]{2,}$/;
 
-  if (!user || !user.id) {
-    setError('User not found. Please log in again.');
-    return;
-  }
+    if (!pickup || !destination || !senderName || !senderPhone || !recipientName || !recipientPhone) {
+      return "All fields are required.";
+    }
 
-  const parcelData = {
-    user_id: user.id,
-    pickup_location_text: pickup,
-    destination_location_text: destination,
-    weight: weight ? Number(weight) : undefined,
-    description,
-    sender_name: senderName,
-    sender_phone_number: senderPhone,
-    recipient_name: recipientName,
-    recipient_phone_number: recipientPhone,
+    if (!nameRegex.test(senderName)) {
+      return "Sender name must be at least 2 characters and contain only letters.";
+    }
+
+    if (!phoneRegex.test(senderPhone)) {
+      return "Sender phone must be a valid number (10-15 digits).";
+    }
+
+    if (!nameRegex.test(recipientName)) {
+      return "Recipient name must be at least 2 characters and contain only letters.";
+    }
+
+    if (!phoneRegex.test(recipientPhone)) {
+      return "Recipient phone must be a valid number (10-15 digits).";
+    }
+
+    return null; // valid
   };
 
-  try {
-    if (!pickup || !destination || !senderName || !senderPhone || !recipientName || !recipientPhone) {
-      setError("Please fill in all required fields.");
-      
+ const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (setSuccess) setSuccess(null);
+    setError(null);
+
+    if (!user || !user.id) {
+      setError('User not found. Please log in again.');
       return;
     }
 
-    await dispatch(createParcel(parcelData)).unwrap();
+    const validationError = validateInputs();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
-    if (setSuccess) setSuccess('Parcel created successfully!');
-    
-    
-    toast.success("Parcel created successfully!");
+    const parcelData = {
+      user_id: user.id,
+      pickup_location_text: pickup,
+      destination_location_text: destination,
+      weight: weight ? Number(weight) : undefined,
+      description,
+      sender_name: senderName,
+      sender_phone_number: senderPhone,
+      recipient_name: recipientName,
+      recipient_phone_number: recipientPhone,
+    };
 
-   
-    setTimeout(() => navigate('/parcels'), 300);
+    try {
+      await dispatch(createParcel(parcelData)).unwrap();
+      if (setSuccess) setSuccess('Parcel created successfully!');
+      toast.success("Parcel created successfully!");
 
-    // Reset form
-    setPickup('');
-    setDestination('');
-    setWeight('');
-    setDescription('');
-    setSenderName('');
-    setSenderPhone('');
-    setRecipientName('');
-    setRecipientPhone('');
-
-  } catch (err) {
-    setError(err?.message || err?.error || 'Failed to create parcel.');
-  }
+      
+      setTimeout(() => navigate('/parcels'), 300);
+      setPickup('');
+      setDestination('');
+      setWeight('');
+      setDescription('');
+      setSenderName('');
+      setSenderPhone('');
+      setRecipientName('');
+      setRecipientPhone('');
+    } catch (err) {
+      setError(err?.message || err?.error || 'Failed to create parcel.');
+    }
 };
+
 
   return (
     <div className="w-full max-w-md">
