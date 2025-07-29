@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getParcels, cancelParcel } from "../redux/parcelSlice";
+import { getParcels, cancelParcel,updateParcelDestination } from "../redux/parcelSlice";
 import Navbar from "../components/Navbar";
+
 
 const ParcelCard = ({ parcel }) => {
   const dispatch = useDispatch();
@@ -54,7 +55,7 @@ const ParcelCard = ({ parcel }) => {
           <span className="font-medium">Destination:</span> {parcel.destination_location_text}
         </p>
         <p>
-          <span className="font-medium">Cost:</span> KES.{parcel.cost?.toFixed(2)} kg
+          <span className="font-medium">Cost:</span> KES.{parcel.cost?.toFixed(2)} 
         </p>
       </div>
       <div className="mt-4 flex flex-wrap gap-3">
@@ -64,14 +65,14 @@ const ParcelCard = ({ parcel }) => {
         >
           View Details
         </button>
-        <button
+        {parcel.status !== "cancelled" && parcel.status !== "delivered" &&(<button
           onClick={() =>
             navigate("/tracking", { state: { trackingId: parcel.id } })
           }
           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md transition"
         >
           Track
-        </button>
+        </button>)}
         {parcel.status !== "cancelled" && parcel.status !== "delivered" && (
           <button
             onClick={handleCancel}
@@ -81,6 +82,19 @@ const ParcelCard = ({ parcel }) => {
             {loading ? "Cancelling..." : "Cancel"}
           </button>
         )}
+        {parcel.status !== "cancelled" && parcel.status !== "delivered" && (
+            <button
+              onClick={() => {
+                const newDestination = prompt("Enter new destination:");
+                if (newDestination) {
+                  dispatch(updateParcelDestination({ id: parcel.id, newDestination }));
+                }
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-md transition"
+            >
+              Change Destination
+            </button>
+          )}
       </div>
     </div>
   );
@@ -220,6 +234,19 @@ const Parcels = () => {
                 </span>
               </td>
               <td className="py-2 px-4 space-x-2 whitespace-nowrap">
+                {parcel.status !== "cancelled" && parcel.status !== "delivered" && (
+                  <button
+                    onClick={() => {
+                      const newDestination = prompt("Enter new destination:");
+                      if (newDestination) {
+                        dispatch(updateParcelDestination({ id: parcel.id, newDestination }));
+                      }
+                    }}
+                    className="bg-orange-500 text-white px-3 py-1 rounded-md text-xs hover:bg-orange-600 transition"
+                  >
+                    Change
+                  </button>
+                )}
                 <button
                   onClick={() => navigate(`/parcels/${parcel.id}`)}
                   className="bg-blue-500 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-600 transition"

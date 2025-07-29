@@ -90,12 +90,12 @@ const App = () => {
           <Route
             path="/parcels/:id"
             element={
-              <AuthWrapper>
+              <UserOnlyRoute>
                 <ParcelDetails />
-              </AuthWrapper>}
+              </UserOnlyRoute>}
           />
           <Route
-            path="/admin"
+            path="/admin/*"
             element={
               <AuthWrapper>
                 <Admin />
@@ -106,7 +106,7 @@ const App = () => {
             path="/admin/parcels/:id"
             element={
               <AuthWrapper>
-                <AdminParcelDetails />
+                <ParcelDetails />
               </AuthWrapper>
             }
           />
@@ -134,5 +134,6 @@ const App = () => {
     </Provider>
   );
 };
+console.log("Google Maps API Key:", process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
 
 export default App;

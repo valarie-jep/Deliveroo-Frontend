@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getParcelById } from '../redux/parcelSlice';
+import Parcels from './Parcels';
 
 
 const AdminParcelDetails = () => {
@@ -30,8 +31,9 @@ const AdminParcelDetails = () => {
       </div>
     );
   }
-
+  console.log(Parcels)
   return (
+    
     <div>
       
       <div className="max-w-xl mx-auto mt-16 p-6 bg-white rounded shadow">

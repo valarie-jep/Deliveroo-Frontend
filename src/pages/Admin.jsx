@@ -257,11 +257,11 @@ const AdminParcels = () => {
                 return 0;
               })
               .map((parcel) => (
-              <tr key={parcel.id}
-                  className="border-b cursor-pointer hover:bg-gray-100 transition"
-                  >
-                <td className="py-2 px-4"onClick={() => navigate(`/admin/parcels/${parcel.id}`)}>{parcel.id}</td>
-                <td className="py-2 px-4">{parcel.sender_name || parcel.sender || '-'}</td>
+              <tr key={parcel.id}>
+                <td className="border-b cursor-pointer hover:bg-gray-100 transition"
+                  onClick={() => navigate(`/admin/parcels/${parcel.id}`)}>{parcel.id}</td>
+                <td className="border-b cursor-pointer hover:bg-gray-100 transition"
+                  onClick={() => navigate(`/admin/parcels/${parcel.id}`)}>{parcel.sender_name || parcel.sender || '-'}</td>
                 <td className="py-2 px-4">{parcel.recipient_name || parcel.recipient || '-'}</td>
                 <td className={`py-2 px-4 font-medium ${getStatusClass(parcel.status)}`}>{parcel.status}</td>
                 <td className="py-2 px-4">{parcel.current_location || '-'}</td>
@@ -310,8 +310,6 @@ const AdminParcels = () => {
 };
 
 
-
-// Admin Histories Page
 const AdminHistories = () => {
   const [histories, setHistories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -409,7 +407,7 @@ const Admin = () => {
           </Routes>
         </main>
       </div>
-      {/* Footer removed */}
+      
     </div>
   );
 };

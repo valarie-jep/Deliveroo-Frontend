@@ -3,6 +3,8 @@ import {useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { createParcel } from '../redux/parcelSlice';
 import LocationAutocomplete from './LocationAutocomplete';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ParcelForm = ({ setSuccess }) => {
   const dispatch = useDispatch();
@@ -19,44 +21,60 @@ const ParcelForm = ({ setSuccess }) => {
   const user = useSelector((state) => state.auth.user);
   const navigate=useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (setSuccess) setSuccess(null);
-    setError(null);
-    if (!user || !user.id) {
-      setError('User not found. Please log in again.');
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (setSuccess) setSuccess(null);
+  setError(null);
+
+  if (!user || !user.id) {
+    setError('User not found. Please log in again.');
+    return;
+  }
+
+  const parcelData = {
+    user_id: user.id,
+    pickup_location_text: pickup,
+    destination_location_text: destination,
+    weight: weight ? Number(weight) : undefined,
+    description,
+    sender_name: senderName,
+    sender_phone_number: senderPhone,
+    recipient_name: recipientName,
+    recipient_phone_number: recipientPhone,
+  };
+
+  try {
+    if (!pickup || !destination || !senderName || !senderPhone || !recipientName || !recipientPhone) {
+      setError("Please fill in all required fields.");
+      
       return;
     }
-    const parcelData = {
-      user_id: user.id,
-      pickup_location_text: pickup,
-      destination_location_text: destination,
-    };
-    if (weight) parcelData.weight = Number(weight);
-    if (description) parcelData.description = description;
-    if (senderName) parcelData.sender_name = senderName;
-    if (senderPhone) parcelData.sender_phone_number = senderPhone;
-    if (recipientName) parcelData.recipient_name = recipientName;
-    if (recipientPhone) parcelData.recipient_phone_number = recipientPhone;
-    try {
-      if (!pickup || !destination || !senderName || !senderPhone || !recipientName || !recipientPhone) {
-      setError("Please fill in all required fields.");
-      return; }
-      await dispatch(createParcel(parcelData)).unwrap();
-      if (setSuccess) setSuccess('Parcel created successfully!');
-      setPickup('');
-      setDestination('');
-      setWeight('');
-      setDescription('');
-      setSenderName('');
-      setSenderPhone('');
-      setRecipientName('');
-      setRecipientPhone('');
-    } catch (err) {
-      setError(err?.message || err?.error || 'Failed to create parcel.');
-    }
-  };
+
+    await dispatch(createParcel(parcelData)).unwrap();
+
+    if (setSuccess) setSuccess('Parcel created successfully!');
+    
+    
+    toast.success("Parcel created successfully!");
+
+   
+    setTimeout(() => navigate('/parcels'), 300);
+
+    // Reset form
+    setPickup('');
+    setDestination('');
+    setWeight('');
+    setDescription('');
+    setSenderName('');
+    setSenderPhone('');
+    setRecipientName('');
+    setRecipientPhone('');
+
+  } catch (err) {
+    setError(err?.message || err?.error || 'Failed to create parcel.');
+  }
+};
 
   return (
     <div className="w-full max-w-md">
