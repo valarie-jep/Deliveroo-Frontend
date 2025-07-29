@@ -25,7 +25,7 @@ const ParcelCard = ({ parcel }) => {
         {/* Sender */}
         <div className="flex items-center gap-2 text-sm">
           <FaUser className="text-indigo-500" />
-          <span className="font-medium">{parcel.sender_name}</span> — 
+          <span className="font-medium">{parcel.sender_name}</span> 
           <FaPhoneAlt className="ml-2 text-gray-500" />
           <span>{parcel.sender_phone_number}</span>
         </div>
@@ -33,7 +33,7 @@ const ParcelCard = ({ parcel }) => {
         {/* Recipient */}
         <div className="flex items-center gap-2 text-sm">
           <FaUser className="text-green-600" />
-          <span className="font-medium">{parcel.recipient_name}</span> — 
+          <span className="font-medium">{parcel.recipient_name}</span> 
           <FaPhoneAlt className="ml-2 text-gray-500" />
           <span>{parcel.recipient_phone_number}</span>
         </div>
@@ -66,6 +66,7 @@ const ParcelCard = ({ parcel }) => {
           <FaBox className="text-orange-500" />
           <span className="text-gray-600">Item:</span>
           <span>{parcel.description} ({parcel.weight} kg)</span>
+          
         </div>
 
         {/* Cost and Distance */}

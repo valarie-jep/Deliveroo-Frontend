@@ -309,8 +309,6 @@ const AdminParcels = () => {
   );
 };
 
-// Remaining code unchanged
-// ...
 
 
 // Admin Histories Page
