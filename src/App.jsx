@@ -4,7 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation 
+  useLocation
 } from "react-router-dom";
 import { Provider } from "react-redux";
 
@@ -13,18 +13,21 @@ import RegisterPage from "./components/RegisterPage.jsx";
 import CreateParcelPage from "./pages/CreateParcelPage.jsx";
 import Dashboard from "./pages/Dashboard";
 
-import Parcels from "./pages/Parcels.jsx"
+import Parcels from "./pages/Parcels.jsx";
 import Admin from "./pages/Admin.jsx";
-import store from './redux/store';
+import store from "./redux/store";
 import ParcelDetails from "./pages/ParcelDetails.jsx";
 import TrackingPage from "./pages/TrackingPage.jsx";
-import Profile from "./pages/Profile.jsx"
+import Profile from "./pages/Profile.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
-
+import AdminParcelDetails from "./pages/AdminParcelDetails.jsx";
 import EmailSettings from "./pages/EmailSettings.jsx";
-// Placeholder components if not implemented
 
+// Toastify (global container)
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
+// Route guards
 const AuthWrapper = ({ children }) => {
   const token = localStorage.getItem("token");
   const location = useLocation();
@@ -85,7 +88,7 @@ const App = () => {
             element={
               <AuthWrapper>
                 <CreateParcelPage />
-                </AuthWrapper>
+              </AuthWrapper>
             }
           />
           <Route
@@ -93,7 +96,8 @@ const App = () => {
             element={
               <UserOnlyRoute>
                 <ParcelDetails />
-              </UserOnlyRoute>}
+              </UserOnlyRoute>
+            }
           />
           <Route
             path="/admin/*"
@@ -103,7 +107,7 @@ const App = () => {
               </AuthWrapper>
             }
           />
-           <Route
+          <Route
             path="/admin/parcels/:id"
             element={
               <AuthWrapper>
@@ -111,37 +115,44 @@ const App = () => {
               </AuthWrapper>
             }
           />
-          <Route 
-          path="/tracking" 
-          element={
-            <AuthWrapper>
+          <Route
+            path="/tracking"
+            element={
+              <AuthWrapper>
                 <TrackingPage />
               </AuthWrapper>
-            } />
-          <Route 
-          path="/profile" 
-          element={
-            <AuthWrapper>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <AuthWrapper>
                 <Profile />
               </AuthWrapper>
-            } />
-          <Route 
-          path="/email-settings" 
-          element={
-            <AuthWrapper>
+            }
+          />
+          <Route
+            path="/email-settings"
+            element={
+              <AuthWrapper>
                 <EmailSettings />
               </AuthWrapper>
-            } />
+            }
+          />
 
-            <Route path="/404" element={<NotFoundPage/>} />
+          <Route path="/404" element={<NotFoundPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+
+        {/* Global toast container — place once, near the root */}
+        <ToastContainer />
       </Router>
     </Provider>
   );
 };
+
 console.log("Google Maps API Key:", process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
 
 export default App;
+
