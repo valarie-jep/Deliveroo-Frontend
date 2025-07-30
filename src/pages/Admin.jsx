@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 import { logout } from '../redux/authSlice';
 import axios from 'axios';
 
-const API_BASE = 'https://deliveroo-server.onrender.com';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 // SVG Icons
 const ParcelIcon = () => (

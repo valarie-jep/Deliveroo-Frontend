@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { notify } from '../utils/toast';
+import emailService from '../services/emailService';
 
-const BASE_URL = 'https://deliveroo-server.onrender.com';
+const BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const getAuthHeaders = (thunkAPI) => {
   const token = thunkAPI.getState().auth.token;
@@ -27,7 +28,19 @@ export const createParcel = createAsyncThunk(
   async (parcelData, thunkAPI) => {
     try {
       const res = await axios.post(`${BASE_URL}/parcels`, parcelData, getAuthHeaders(thunkAPI));
-      return res.data;
+      const createdParcel = res.data;
+
+      // non-blocking email notification
+      try {
+        const user = thunkAPI.getState().auth.user;
+        if (user && user.email) {
+          await emailService.sendParcelCreatedEmail(createdParcel, user.email);
+        }
+      } catch (emailErr) {
+        console.error('Failed to send parcel created email:', emailErr);
+      }
+
+      return createdParcel;
     } catch (error) {
       const message = error?.response?.data?.message || 'Failed to create parcel';
       return thunkAPI.rejectWithValue(message);
@@ -61,7 +74,19 @@ export const cancelParcel = createAsyncThunk(
         {},
         getAuthHeaders(thunkAPI)
       );
-      return res.data;
+      const cancelledParcel = res.data;
+
+      // non-blocking email notification
+      try {
+        const user = thunkAPI.getState().auth.user;
+        if (user && user.email) {
+          await emailService.sendCancellationEmail(cancelledParcel, user.email);
+        }
+      } catch (emailErr) {
+        console.error('Failed to send cancellation email:', emailErr);
+      }
+
+      return cancelledParcel;
     } catch (error) {
       const message = error?.response?.data?.message || 'Failed to cancel parcel';
       return thunkAPI.rejectWithValue(message);
@@ -78,7 +103,25 @@ export const updateParcelStatus = createAsyncThunk(
         { status },
         getAuthHeaders(thunkAPI)
       );
-      return res.data;
+      const updatedParcel = res.data;
+
+      // non-blocking email notifications
+      try {
+        const state = thunkAPI.getState();
+        const user = state.auth.user;
+        if (user && user.email) {
+          const oldStatus = state.parcels.list.find(p => p.id === parcelId)?.status;
+          await emailService.sendStatusUpdateEmail(parcelId, user.email, oldStatus, status);
+
+          if (status === 'delivered') {
+            await emailService.sendDeliveryConfirmationEmail(updatedParcel, user.email);
+          }
+        }
+      } catch (emailErr) {
+        console.error('Failed to send status update email:', emailErr);
+      }
+
+      return updatedParcel;
     } catch (error) {
       const message = error?.response?.data?.message || 'Failed to update status';
       return thunkAPI.rejectWithValue(message);
@@ -95,7 +138,19 @@ export const updateParcelLocation = createAsyncThunk(
         { current_location: location },
         getAuthHeaders(thunkAPI)
       );
-      return res.data;
+      const updatedParcel = res.data;
+
+      // non-blocking email notification
+      try {
+        const user = thunkAPI.getState().auth.user;
+        if (user && user.email) {
+          await emailService.sendLocationUpdateEmail(updatedParcel, user.email, location);
+        }
+      } catch (emailErr) {
+        console.error('Failed to send location update email:', emailErr);
+      }
+
+      return updatedParcel;
     } catch (error) {
       const message = error?.response?.data?.message || 'Failed to update location';
       return thunkAPI.rejectWithValue(message);
@@ -237,7 +292,6 @@ const parcelSlice = createSlice({
         } else {
           state.list[index] = parcel;
         }
-
       })
       .addCase(getParcelById.rejected, (state, action) => {
         state.error = action.payload || action.error?.message || 'Failed to fetch parcel details';
@@ -247,4 +301,5 @@ const parcelSlice = createSlice({
 });
 
 export default parcelSlice.reducer;
+
 

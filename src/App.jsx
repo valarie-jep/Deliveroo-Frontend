@@ -21,6 +21,7 @@ import TrackingPage from "./pages/TrackingPage.jsx";
 import Profile from "./pages/Profile.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import AdminParcelDetails from "./pages/AdminParcelDetails.jsx";
+import EmailSettings from "./pages/EmailSettings.jsx";
 
 // Toastify (global container)
 import { ToastContainer } from "react-toastify";
@@ -130,6 +131,14 @@ const App = () => {
               </AuthWrapper>
             }
           />
+          <Route
+            path="/email-settings"
+            element={
+              <AuthWrapper>
+                <EmailSettings />
+              </AuthWrapper>
+            }
+          />
 
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -146,3 +155,4 @@ const App = () => {
 console.log("Google Maps API Key:", process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
 
 export default App;
+
