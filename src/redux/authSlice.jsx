@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { notify } from '../utils/toast';
 
-const BASE_URL = process.env.REACT_APP_API_URL || '';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
 
 const tokenFromStorage = localStorage.getItem('token');
 const userFromStorage = localStorage.getItem('user');
@@ -24,7 +24,8 @@ export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (formData, thunkAPI) => {
     try {
-      const response = await axios.post(`${BASE_URL}/register`, formData);
+      // IMPORTANT: backend route is /signup (not /register)
+      const response = await axios.post(`${BASE_URL}/signup`, formData);
       return response.data;
     } catch (error) {
       const message = error?.response?.data?.message || 'Signup failed';
@@ -66,10 +67,8 @@ const authSlice = createSlice({
         state.user = user;
         state.token = access_token;
         state.role = user?.admin ? 'admin' : 'user';
-
         localStorage.setItem('token', access_token);
         localStorage.setItem('user', JSON.stringify(user));
-
         notify.success(`Welcome back, ${user?.first_name || user?.firstName || user?.username || 'user'}!`);
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -102,4 +101,5 @@ export const { logout } = authSlice.actions;
 export const selectIsAuthenticated = (state) => !!state.auth.token;
 
 export default authSlice.reducer;
+
 
