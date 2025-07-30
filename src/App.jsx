@@ -20,7 +20,8 @@ import ParcelDetails from "./pages/ParcelDetails.jsx";
 import TrackingPage from "./pages/TrackingPage.jsx";
 import Profile from "./pages/Profile.jsx"
 import NotFoundPage from "./pages/NotFoundPage.jsx";
-import AdminParcelDetails from "./pages/AdminParcelDetails.jsx";
+
+import EmailSettings from "./pages/EmailSettings.jsx";
 // Placeholder components if not implemented
 
 
@@ -122,6 +123,13 @@ const App = () => {
           element={
             <AuthWrapper>
                 <Profile />
+              </AuthWrapper>
+            } />
+          <Route 
+          path="/email-settings" 
+          element={
+            <AuthWrapper>
+                <EmailSettings />
               </AuthWrapper>
             } />
 

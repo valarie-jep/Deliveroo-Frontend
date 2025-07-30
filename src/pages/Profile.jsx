@@ -12,7 +12,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("https://deliveroo-server.onrender.com/profile", {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL || ''}/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import emailService from '../services/emailService';
 
-const BASE_URL = 'https://deliveroo-server.onrender.com';
+const BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const getAuthHeaders = (thunkAPI) => {
   const token = thunkAPI.getState().auth.token;
@@ -20,7 +21,18 @@ export const createParcel = createAsyncThunk(
   'parcels/createParcel',
   async (parcelData, thunkAPI) => {
     const res = await axios.post(`${BASE_URL}/parcels`, parcelData, getAuthHeaders(thunkAPI));
-    return res.data;
+    const createdParcel = res.data;
+    
+    try {
+      const user = thunkAPI.getState().auth.user;
+      if (user && user.email) {
+        await emailService.sendParcelCreatedEmail(createdParcel, user.email);
+      }
+    } catch (error) {
+      console.error('Failed to send parcel created email:', error);
+    }
+    
+    return createdParcel;
   }
 );
 
@@ -44,7 +56,18 @@ export const cancelParcel = createAsyncThunk(
       {},
       getAuthHeaders(thunkAPI)
     );
-    return res.data;
+    const cancelledParcel = res.data;
+    
+    try {
+      const user = thunkAPI.getState().auth.user;
+      if (user && user.email) {
+        await emailService.sendCancellationEmail(cancelledParcel, user.email);
+      }
+    } catch (error) {
+      console.error('Failed to send cancellation email:', error);
+    }
+    
+    return cancelledParcel;
   }
 );
 
@@ -56,7 +79,23 @@ export const updateParcelStatus = createAsyncThunk(
       { status },
       getAuthHeaders(thunkAPI)
     );
-    return res.data;
+    const updatedParcel = res.data;
+    
+    try {
+      const user = thunkAPI.getState().auth.user;
+      if (user && user.email) {
+        const oldStatus = thunkAPI.getState().parcels.list.find(p => p.id === parcelId)?.status;
+        await emailService.sendStatusUpdateEmail(parcelId, user.email, oldStatus, status);
+        
+        if (status === 'delivered') {
+          await emailService.sendDeliveryConfirmationEmail(updatedParcel, user.email);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to send status update email:', error);
+    }
+    
+    return updatedParcel;
   }
 );
 
@@ -68,7 +107,18 @@ export const updateParcelLocation = createAsyncThunk(
       { current_location: location },
       getAuthHeaders(thunkAPI)
     );
-    return res.data;
+    const updatedParcel = res.data;
+    
+    try {
+      const user = thunkAPI.getState().auth.user;
+      if (user && user.email) {
+        await emailService.sendLocationUpdateEmail(updatedParcel, user.email, location);
+      }
+    } catch (error) {
+      console.error('Failed to send location update email:', error);
+    }
+    
+    return updatedParcel;
   }
 );
 
