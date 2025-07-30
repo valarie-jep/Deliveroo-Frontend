@@ -25,17 +25,50 @@ const RegisterPage = () => {
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name) newErrors.name = "Name is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    if (!formData.phone) newErrors.phone = "Phone number is required";
-    if (!formData.password) newErrors.password = "Password is required";
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const newErrors = {};
+
+  // Name validation
+  if (!formData.name.trim()) {
+    newErrors.name = "Name is required";
+  } else if (formData.name.length < 2) {
+    newErrors.name = "Name must be at least 2 characters";
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!formData.email.trim()) {
+    newErrors.email = "Email is required";
+  } else if (!emailRegex.test(formData.email)) {
+    newErrors.email = "Invalid email address";
+  }
+
+  // Phone validation
+  const phoneRegex = /^[0-9]{10,13}$/;
+  if (!formData.phone.trim()) {
+    newErrors.phone = "Phone number is required";
+  } else if (!phoneRegex.test(formData.phone)) {
+    newErrors.phone = "Phone number must be 10–13 digits";
+  }
+
+  // Password validation
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+  if (!formData.password) {
+    newErrors.password = "Password is required";
+  } else if (!passwordRegex.test(formData.password)) {
+    newErrors.password = "Password must be at least 8 characters, include letters and numbers";
+  }
+
+  // Confirm password validation
+  if (!formData.confirmPassword) {
+    newErrors.confirmPassword = "Please confirm your password";
+  } else if (formData.password !== formData.confirmPassword) {
+    newErrors.confirmPassword = "Passwords do not match";
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

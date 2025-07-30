@@ -20,6 +20,9 @@ import ParcelDetails from "./pages/ParcelDetails.jsx";
 import TrackingPage from "./pages/TrackingPage.jsx";
 import Profile from "./pages/Profile.jsx"
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import AdminParcelDetails from "./pages/AdminParcelDetails.jsx";
+// Placeholder components if not implemented
+
 
 const AuthWrapper = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -71,17 +74,17 @@ const App = () => {
           <Route
             path="/parcels"
             element={
-              <UserOnlyRoute>
+              <AuthWrapper>
                 <Parcels />
-              </UserOnlyRoute>
+              </AuthWrapper>
             }
           />
           <Route
             path="/parcels/new"
             element={
-              <UserOnlyRoute>
+              <AuthWrapper>
                 <CreateParcelPage />
-              </UserOnlyRoute>
+                </AuthWrapper>
             }
           />
           <Route
@@ -89,39 +92,48 @@ const App = () => {
             element={
               <UserOnlyRoute>
                 <ParcelDetails />
-              </UserOnlyRoute>
-            }
+              </UserOnlyRoute>}
           />
           <Route
-            path="/tracking"
-            element={
-              <UserOnlyRoute>
-                <TrackingPage />
-              </UserOnlyRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <UserOnlyRoute>
-                <Profile />
-              </UserOnlyRoute>
-            }
-          />
-          <Route
-            path="/admin"
+            path="/admin/*"
             element={
               <AuthWrapper>
                 <Admin />
               </AuthWrapper>
             }
           />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<NotFoundPage />} />
+           <Route
+            path="/admin/parcels/:id"
+            element={
+              <AuthWrapper>
+                <ParcelDetails />
+              </AuthWrapper>
+            }
+          />
+          <Route 
+          path="/tracking" 
+          element={
+            <AuthWrapper>
+                <TrackingPage />
+              </AuthWrapper>
+            } />
+          <Route 
+          path="/profile" 
+          element={
+            <AuthWrapper>
+                <Profile />
+              </AuthWrapper>
+            } />
+
+            <Route path="/404" element={<NotFoundPage/>} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
     </Provider>
   );
 };
+console.log("Google Maps API Key:", process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
 
 export default App;

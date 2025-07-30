@@ -189,9 +189,15 @@ const TrackingPage = () => {
             
             <button
               onClick={() => navigate(`/parcels/${parcel.id}`)}
-              className="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
+              className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
             >
               View Full Details
+            </button>
+            <button
+              onClick={() => navigate(`/parcels`)}
+              className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
+            >
+              Back to parcels
             </button>
           </div>
         )}

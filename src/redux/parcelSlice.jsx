@@ -72,6 +72,17 @@ export const updateParcelLocation = createAsyncThunk(
   }
 );
 
+// Fetch a single parcel by ID
+export const getParcelById = createAsyncThunk(
+  'parcels/getParcelById',
+  async (parcelId, thunkAPI) => {
+    const res = await axios.get(`${BASE_URL}/admin/parcels/${parcelId}`, getAuthHeaders(thunkAPI));
+    return res.data;
+  }
+);
+
+// ------------------ SLICE ------------------
+
 const parcelSlice = createSlice({
   name: 'parcels',
   initialState: {
@@ -121,6 +132,16 @@ const parcelSlice = createSlice({
         const updated = action.payload;
         const index = state.list.findIndex(p => p.id === updated.id);
         if (index !== -1) state.list[index] = updated;
+      })
+
+      .addCase(getParcelById.fulfilled, (state, action) => {
+        const parcel = action.payload;
+        const index = state.list.findIndex(p => p.id === parcel.id);
+        if (index === -1) {
+          state.list.push(parcel); 
+        } else {
+          state.list[index] = parcel; 
+        }
       });
   }
 });

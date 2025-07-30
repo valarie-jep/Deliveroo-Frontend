@@ -18,13 +18,22 @@ const TransitIcon = () => (
 const DeliveredIcon = () => (
   <svg className="w-10 h-10 text-blue-500 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
 );
-
+const getStatusClass = (status) => {
+  const colorMap = {
+    pending: 'text-purple-500',
+    in_transit: 'text-orange-500',
+    delivered: 'text-green-500',
+    cancelled: 'text-red-500',
+  };
+  return colorMap[status?.toLowerCase()] || 'text-gray-400';
+};
 // Dashboard Home: Stats
 const AdminDashboardHome = () => {
   const [stats, setStats] = useState({ total: 0, inTransit: 0, delivered: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [parcels, setParcels] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStatsAndParcels = async () => {
@@ -97,7 +106,9 @@ const AdminDashboardHome = () => {
                 </thead>
                 <tbody>
                   {parcels.map((parcel) => (
-                    <tr key={parcel.id} className="border-b">
+                  <tr key={parcel.id}
+                  className="border-b cursor-pointer hover:bg-gray-100 transition"
+                  onClick={() => navigate(`/admin/parcels/${parcel.id}`)} >
                       <td className="py-2 px-4">{parcel.id}</td>
                       <td className="py-2 px-4">{parcel.sender_name || parcel.sender || '-'}</td>
                       <td className="py-2 px-4">{parcel.recipient_name || parcel.recipient || '-'}</td>
@@ -122,6 +133,10 @@ const AdminParcels = () => {
   const [error, setError] = useState(null);
   const [statusUpdate, setStatusUpdate] = useState({});
   const [locationUpdate, setLocationUpdate] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const navigate = useNavigate();
 
   const fetchParcels = async () => {
     try {
@@ -175,7 +190,41 @@ const AdminParcels = () => {
 
   return (
     <div className="bg-white rounded-lg shadow p-6 overflow-x-auto">
+      
       <h2 className="text-2xl font-bold mb-4">All Parcels</h2>
+        {/* Search and Sort Controls */}
+        <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search parcels..."
+            className="border px-4 py-2 rounded w-full sm:w-64"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+          />
+
+          {/* Sort Controls */}
+          <div className="flex items-center gap-2">
+            <select
+              className="border px-2 py-2 rounded"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="">Sort By</option>
+              <option value="sender">Sender</option>
+              <option value="recipient">Recipient</option>
+              <option value="status">Status</option>
+              <option value="created_at">Created Time</option>
+            </select>
+            <button
+              onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+              className="bg-gray-200 text-sm px-3 py-2 rounded hover:bg-gray-300"
+            >
+              {sortOrder === 'asc' ? '⬆️ Asc' : '⬇️ Desc'}
+            </button>
+          </div>
+        </div>
+
       {loading ? (
         <div>Loading parcels...</div>
       ) : error ? (
@@ -194,12 +243,27 @@ const AdminParcels = () => {
             </tr>
           </thead>
           <tbody>
-            {parcels.map((parcel) => (
-              <tr key={parcel.id} className="border-b">
-                <td className="py-2 px-4">{parcel.id}</td>
-                <td className="py-2 px-4">{parcel.sender_name || parcel.sender || '-'}</td>
+            {[...parcels]
+              .filter((parcel) =>
+                [parcel.id, parcel.sender, parcel.sender_name, parcel.recipient, parcel.recipient_name, parcel.status, parcel.current_location]
+                  .some((field) => field?.toString().toLowerCase().includes(searchTerm))
+              )
+              .sort((a, b) => {
+                if (!sortBy) return 0;
+                const valA = a[sortBy]?.toString().toLowerCase() || '';
+                const valB = b[sortBy]?.toString().toLowerCase() || '';
+                if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+                if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+                return 0;
+              })
+              .map((parcel) => (
+              <tr key={parcel.id}>
+                <td className="border-b cursor-pointer hover:bg-gray-100 transition"
+                  onClick={() => navigate(`/admin/parcels/${parcel.id}`)}>{parcel.id}</td>
+                <td className="border-b cursor-pointer hover:bg-gray-100 transition"
+                  onClick={() => navigate(`/admin/parcels/${parcel.id}`)}>{parcel.sender_name || parcel.sender || '-'}</td>
                 <td className="py-2 px-4">{parcel.recipient_name || parcel.recipient || '-'}</td>
-                <td className="py-2 px-4">{parcel.status}</td>
+                <td className={`py-2 px-4 font-medium ${getStatusClass(parcel.status)}`}>{parcel.status}</td>
                 <td className="py-2 px-4">{parcel.current_location || '-'}</td>
                 <td className="py-2 px-4">
                   <select
@@ -229,7 +293,8 @@ const AdminParcels = () => {
                     onChange={e => setLocationUpdate(prev => ({ ...prev, [parcel.id]: e.target.value }))}
                   />
                   <button
-                    className="bg-blue-500 text-white px-2 py-1 rounded"
+                    className="bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-400"
+
                     onClick={() => handleLocationChange(parcel.id)}
                   >
                     Update
@@ -244,11 +309,7 @@ const AdminParcels = () => {
   );
 };
 
-// Remaining code unchanged
-// ...
 
-
-// Admin Histories Page
 const AdminHistories = () => {
   const [histories, setHistories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -346,7 +407,7 @@ const Admin = () => {
           </Routes>
         </main>
       </div>
-      {/* Footer removed */}
+      
     </div>
   );
 };
