@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import emailService from '../services/emailService';
 import { notify } from '../utils/toast';
 
-const BASE_URL = 'https://deliveroo-server.onrender.com';
+const BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const getAuthHeaders = (thunkAPI) => {
   const token = thunkAPI.getState().auth.token;
@@ -25,13 +26,19 @@ export const getParcels = createAsyncThunk(
 export const createParcel = createAsyncThunk(
   'parcels/createParcel',
   async (parcelData, thunkAPI) => {
+    const res = await axios.post(`${BASE_URL}/parcels`, parcelData, getAuthHeaders(thunkAPI));
+    const createdParcel = res.data;
+    
     try {
-      const res = await axios.post(`${BASE_URL}/parcels`, parcelData, getAuthHeaders(thunkAPI));
-      return res.data;
+      const user = thunkAPI.getState().auth.user;
+      if (user && user.email) {
+        await emailService.sendParcelCreatedEmail(createdParcel, user.email);
+      }
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to create parcel';
-      return thunkAPI.rejectWithValue(message);
+      console.error('Failed to send parcel created email:', error);
     }
+    
+    return createdParcel;
   }
 );
 
@@ -55,51 +62,74 @@ export const updateParcelDestination = createAsyncThunk(
 export const cancelParcel = createAsyncThunk(
   'parcels/cancelParcel',
   async (parcelId, thunkAPI) => {
+    const res = await axios.patch(
+      `${BASE_URL}/parcels/${parcelId}/cancel`,
+      {},
+      getAuthHeaders(thunkAPI)
+    );
+    const cancelledParcel = res.data;
+    
     try {
-      const res = await axios.patch(
-        `${BASE_URL}/parcels/${parcelId}/cancel`,
-        {},
-        getAuthHeaders(thunkAPI)
-      );
-      return res.data;
+      const user = thunkAPI.getState().auth.user;
+      if (user && user.email) {
+        await emailService.sendCancellationEmail(cancelledParcel, user.email);
+      }
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to cancel parcel';
-      return thunkAPI.rejectWithValue(message);
+      console.error('Failed to send cancellation email:', error);
     }
+    
+    return cancelledParcel;
   }
 );
 
 export const updateParcelStatus = createAsyncThunk(
   'parcels/updateParcelStatus',
   async ({ parcelId, status }, thunkAPI) => {
+    const res = await axios.patch(
+      `${BASE_URL}/parcels/${parcelId}/status`,
+      { status },
+      getAuthHeaders(thunkAPI)
+    );
+    const updatedParcel = res.data;
+    
     try {
-      const res = await axios.patch(
-        `${BASE_URL}/parcels/${parcelId}/status`,
-        { status },
-        getAuthHeaders(thunkAPI)
-      );
-      return res.data;
+      const user = thunkAPI.getState().auth.user;
+      if (user && user.email) {
+        const oldStatus = thunkAPI.getState().parcels.list.find(p => p.id === parcelId)?.status;
+        await emailService.sendStatusUpdateEmail(parcelId, user.email, oldStatus, status);
+        
+        if (status === 'delivered') {
+          await emailService.sendDeliveryConfirmationEmail(updatedParcel, user.email);
+        }
+      }
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update status';
-      return thunkAPI.rejectWithValue(message);
+      console.error('Failed to send status update email:', error);
     }
+    
+    return updatedParcel;
   }
 );
 
 export const updateParcelLocation = createAsyncThunk(
   'parcels/updateParcelLocation',
   async ({ parcelId, location }, thunkAPI) => {
+    const res = await axios.patch(
+      `${BASE_URL}/parcels/${parcelId}/location`,
+      { current_location: location },
+      getAuthHeaders(thunkAPI)
+    );
+    const updatedParcel = res.data;
+    
     try {
-      const res = await axios.patch(
-        `${BASE_URL}/parcels/${parcelId}/location`,
-        { current_location: location },
-        getAuthHeaders(thunkAPI)
-      );
-      return res.data;
+      const user = thunkAPI.getState().auth.user;
+      if (user && user.email) {
+        await emailService.sendLocationUpdateEmail(updatedParcel, user.email, location);
+      }
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update location';
-      return thunkAPI.rejectWithValue(message);
+      console.error('Failed to send location update email:', error);
     }
+    
+    return updatedParcel;
   }
 );
 

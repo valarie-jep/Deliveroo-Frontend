@@ -20,7 +20,8 @@ import ParcelDetails from "./pages/ParcelDetails.jsx";
 import TrackingPage from "./pages/TrackingPage.jsx";
 import Profile from "./pages/Profile.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
-import AdminParcelDetails from "./pages/AdminParcelDetails.jsx";
+
+import EmailSettings from "./pages/EmailSettings.jsx";
 
 // Toastify (global container)
 import { ToastContainer } from "react-toastify";
@@ -128,8 +129,14 @@ const App = () => {
               <AuthWrapper>
                 <Profile />
               </AuthWrapper>
-            }
-          />
+            } />
+          <Route 
+          path="/email-settings" 
+          element={
+            <AuthWrapper>
+                <EmailSettings />
+              </AuthWrapper>
+            } />
 
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
