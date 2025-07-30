@@ -20,7 +20,6 @@ import ParcelDetails from "./pages/ParcelDetails.jsx";
 import TrackingPage from "./pages/TrackingPage.jsx";
 import Profile from "./pages/Profile.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
-
 import EmailSettings from "./pages/EmailSettings.jsx";
 
 // Toastify (global container)
