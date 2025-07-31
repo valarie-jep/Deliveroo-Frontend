@@ -303,7 +303,8 @@ const Parcels = () => {
         </tbody>
       </table>
     </div>
-        )}
+  )}
+        </div>
       </div>
     </div>
   );
