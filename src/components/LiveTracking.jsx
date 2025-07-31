@@ -46,7 +46,7 @@ const ClockIcon = () => (
   </svg>
 );
 
-const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
+const LiveTracking = ({ parcelId, parcel, onTrackingUpdate, globalDemoState, setGlobalDemoState }) => {
   const [trackingData, setTrackingData] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -117,8 +117,9 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     }
 
     // Cleanup function to stop tracking when component unmounts
+    // Don't cleanup if demo is active to prevent stopping demo when switching tabs
     return () => {
-      if (parcelId) {
+      if (parcelId && !isDemoMode) {
         trackingService.cleanup(parcelId);
       }
     };
@@ -179,6 +180,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     if (!parcelId) return;
 
     setIsDemoMode(true);
+    setGlobalDemoState(true);
     setIsTracking(false);
     setError(null);
 
@@ -192,13 +194,14 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     setTimeout(() => {
       trackingService.startDemo(parcelId, handleTrackingUpdate);
     }, 1000);
-  }, [parcelId, handleTrackingUpdate]);
+  }, [parcelId, handleTrackingUpdate, setGlobalDemoState]);
 
   // Stop demo
   const stopDemo = useCallback(() => {
     if (!parcelId) return;
 
     setIsDemoMode(false);
+    setGlobalDemoState(false);
     trackingService.stopDemo(parcelId);
     trackingService.disablePresentationMode();
     
@@ -208,7 +211,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
         startTracking();
       }, 1000);
     }
-  }, [parcelId, autoRefresh, startTracking]);
+  }, [parcelId, autoRefresh, startTracking, setGlobalDemoState]);
 
   const formatTimeRemaining = (estimatedDate) => {
     if (!estimatedDate) return 'Calculating...';

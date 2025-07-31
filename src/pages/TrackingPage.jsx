@@ -46,6 +46,7 @@ const TrackingPage = () => {
   const [currentParcel, setCurrentParcel] = useState(parcel);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [activeTab, setActiveTab] = useState('tracking');
+  const [globalDemoState, setGlobalDemoState] = useState(false);
 
   // Fetch parcel if not found in store
   useEffect(() => {
@@ -119,9 +120,9 @@ const TrackingPage = () => {
       setMapZoom(14); // Zoom in for current position
     }
 
-    // Show demo mode notification
+    // Update global demo state
     if (trackingData.isDemoMode) {
-      // console.log('🎬 Demo mode active - updating all components'); // Removed console.log
+      setGlobalDemoState(true);
     }
   }, [currentParcel]);
 
@@ -200,11 +201,11 @@ const TrackingPage = () => {
                 ← Back to Parcels
               </Link>
               
-              {/* Demo Mode Indicator */}
-              {isDemoMode && (
+              {/* Global Demo Mode Indicator */}
+              {globalDemoState && (
                 <div className="flex items-center space-x-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full">
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium">Demo Mode</span>
+                  <span className="text-sm font-medium">🎬 Demo Active</span>
                 </div>
               )}
             </div>
@@ -258,6 +259,8 @@ const TrackingPage = () => {
                 parcelId={parcelId} 
                 parcel={currentParcel}
                 onTrackingUpdate={handleTrackingUpdate}
+                globalDemoState={globalDemoState}
+                setGlobalDemoState={setGlobalDemoState}
               />
             </div>
           )}
