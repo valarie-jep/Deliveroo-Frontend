@@ -62,22 +62,46 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
     }
   }, [isDemoMode]);
 
-  // Update current position and route path when parcel data changes
-  useEffect(() => {
-    if (parcel) {
-      const newRoutePath = generateRoutePath(parcel);
-      setRoutePath(newRoutePath);
-      
-      const newCurrentPosition = calculateCurrentPosition(parcel);
-      setCurrentPosition(newCurrentPosition);
-      
-      console.log('🗺️ Map updated:', {
-        routePath: newRoutePath.length,
-        currentPosition: newCurrentPosition,
-        parcelProgress: parcel.progress
-      });
+  // Get coordinates from parcel
+  const getPickupCoordinates = useCallback(() => {
+    try {
+      // Try pickup_location_coordinates first
+      if (parcel?.pickup_location_coordinates) {
+        return JSON.parse(parcel.pickup_location_coordinates);
+      }
+      // Fallback to individual lat/lng fields
+      else if (parcel?.pick_up_latitude && parcel?.pick_up_longitude) {
+        return {
+          lat: parseFloat(parcel.pick_up_latitude),
+          lng: parseFloat(parcel.pick_up_longitude)
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing pickup coordinates:', error);
+      return null;
     }
-  }, [parcel, generateRoutePath, calculateCurrentPosition]);
+  }, [parcel]);
+
+  const getDestinationCoordinates = useCallback(() => {
+    try {
+      // Try destination_location_coordinates first
+      if (parcel?.destination_location_coordinates) {
+        return JSON.parse(parcel.destination_location_coordinates);
+      }
+      // Fallback to individual lat/lng fields
+      else if (parcel?.destination_latitude && parcel?.destination_longitude) {
+        return {
+          lat: parseFloat(parcel.destination_latitude),
+          lng: parseFloat(parcel.destination_longitude)
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing destination coordinates:', error);
+      return null;
+    }
+  }, [parcel]);
 
   // Generate route path with intermediate points
   const generateRoutePath = useCallback((parcelData) => {
@@ -111,23 +135,26 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
       console.error('Error generating route path:', error);
       return [];
     }
-  }, []);
+  }, [getPickupCoordinates, getDestinationCoordinates]);
 
-  // Update route path when parcel changes
+  // Update current position and route path when parcel data changes
   useEffect(() => {
     if (parcel) {
-      const path = generateRoutePath(parcel);
-      setRoutePath(path);
+      const newRoutePath = generateRoutePath(parcel);
+      setRoutePath(newRoutePath);
+      
+      const newCurrentPosition = calculateCurrentPosition(parcel);
+      setCurrentPosition(newCurrentPosition);
+      
+      console.log('🗺️ Map updated:', {
+        routePath: newRoutePath.length,
+        currentPosition: newCurrentPosition,
+        parcelProgress: parcel.progress
+      });
     }
-  }, [parcel, generateRoutePath]);
+  }, [parcel, generateRoutePath, calculateCurrentPosition]);
 
-  // Update current position when parcel status changes
-  useEffect(() => {
-    if (parcel) {
-      const position = calculateCurrentPosition(parcel);
-      // You can use position for current location marker if needed
-    }
-  }, [parcel, calculateCurrentPosition]);
+
 
   // Show loading state if Google Maps is not loaded
   if (loadError) {
@@ -224,46 +251,7 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
     }
   };
 
-  // Get coordinates from parcel
-  const getPickupCoordinates = () => {
-    try {
-      // Try pickup_location_coordinates first
-      if (parcel?.pickup_location_coordinates) {
-        return JSON.parse(parcel.pickup_location_coordinates);
-      }
-      // Fallback to individual lat/lng fields
-      else if (parcel?.pick_up_latitude && parcel?.pick_up_longitude) {
-        return {
-          lat: parseFloat(parcel.pick_up_latitude),
-          lng: parseFloat(parcel.pick_up_longitude)
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error parsing pickup coordinates:', error);
-      return null;
-    }
-  };
 
-  const getDestinationCoordinates = () => {
-    try {
-      // Try destination_location_coordinates first
-      if (parcel?.destination_location_coordinates) {
-        return JSON.parse(parcel.destination_location_coordinates);
-      }
-      // Fallback to individual lat/lng fields
-      else if (parcel?.destination_latitude && parcel?.destination_longitude) {
-        return {
-          lat: parseFloat(parcel.destination_latitude),
-          lng: parseFloat(parcel.destination_longitude)
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error parsing destination coordinates:', error);
-      return null;
-    }
-  };
 
   const pickupCoords = getPickupCoordinates();
   const destinationCoords = getDestinationCoordinates();
