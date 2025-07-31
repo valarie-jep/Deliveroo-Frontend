@@ -54,6 +54,9 @@ class TrackingService {
       }
       this.activeTrackers.delete(parcelId);
     }
+    
+    // Also stop any demo for this parcel
+    this.stopDemo(parcelId);
   }
 
   // Update tracking data for a specific tracker
@@ -166,7 +169,8 @@ class TrackingService {
   startDemo(parcelId, onUpdate) {
     console.log('🎬 Starting enhanced demo mode with real data updates');
     
-    // Stop any existing demo for this parcel
+    // Stop any existing tracking and demo for this parcel
+    this.stopTracking(parcelId);
     this.stopDemo(parcelId);
     
     const demoUpdates = [
@@ -274,7 +278,7 @@ class TrackingService {
         };
         
         try {
-          // Update the real parcel data in backend and Redux store
+          // Try to update the real parcel data in backend and Redux store
           await this.updateParcelStatusInBackend(parcelId, update.status, {
             current_location: update.current_location,
             estimated_delivery: update.estimated_delivery,
@@ -282,28 +286,33 @@ class TrackingService {
             map_position: update.map_position
           });
           
-          // Call the update callback with the new data
-          if (onUpdate) {
-            onUpdate({
-              ...update,
-              parcelId,
-              isDemoMode: true
-            });
-          }
-          
-          updateIndex++;
+          console.log(`✅ Successfully updated parcel ${parcelId} status to ${update.status}`);
         } catch (error) {
-          console.error('❌ Error updating parcel status in demo:', error);
-          // Continue with demo even if backend update fails
-          if (onUpdate) {
-            onUpdate({
-              ...update,
-              parcelId,
-              isDemoMode: true
-            });
-          }
-          updateIndex++;
+          console.error('❌ Error updating parcel status in backend:', error);
+          console.log('🔄 Falling back to frontend-only demo mode');
+          
+          // Fallback: Update only Redux store (frontend-only demo)
+          store.dispatch(updateParcelStatus({
+            parcelId: parseInt(parcelId),
+            status: update.status,
+            current_location: update.current_location,
+            estimated_delivery: update.estimated_delivery,
+            last_updated: new Date().toISOString(),
+            progress: update.progress,
+            map_position: update.map_position
+          }));
         }
+        
+        // Call the update callback with the new data
+        if (onUpdate) {
+          onUpdate({
+            ...update,
+            parcelId,
+            isDemoMode: true
+          });
+        }
+        
+        updateIndex++;
       } else {
         clearInterval(demoInterval);
         this.demoIntervals.delete(parcelId);

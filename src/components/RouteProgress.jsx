@@ -1,6 +1,32 @@
 import React from 'react';
 import { calculateProgressPercentage, calculateEstimatedArrival, formatTimeRemaining } from '../utils/distanceCalculator';
 
+// SVG Icons
+const PackageIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+  </svg>
+);
+
+const TruckIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+  </svg>
+);
+
+const ClockIcon = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+  </svg>
+);
+
 const RouteProgress = ({ parcel, isDemoMode = false }) => {
   if (!parcel) {
     return (
@@ -17,15 +43,15 @@ const RouteProgress = ({ parcel, isDemoMode = false }) => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'pending':
-        return '📦';
+        return <PackageIcon />;
       case 'in_transit':
-        return '🚚';
+        return <TruckIcon />;
       case 'delivered':
-        return '✅';
+        return <CheckIcon />;
       case 'cancelled':
-        return '❌';
+        return <StopIcon />;
       default:
-        return '⏳';
+        return <ClockIcon />;
     }
   };
 
@@ -60,9 +86,9 @@ const RouteProgress = ({ parcel, isDemoMode = false }) => {
   };
 
   const steps = [
-    { id: 'pending', label: 'Pending', icon: '📦', description: 'Parcel prepared' },
-    { id: 'in_transit', label: 'In Transit', icon: '🚚', description: 'On the way' },
-    { id: 'delivered', label: 'Delivered', icon: '✅', description: 'Completed' }
+    { id: 'pending', label: 'Pending', icon: <PackageIcon />, description: 'Parcel prepared' },
+    { id: 'in_transit', label: 'In Transit', icon: <TruckIcon />, description: 'On the way' },
+    { id: 'delivered', label: 'Delivered', icon: <CheckIcon />, description: 'Completed' }
   ];
 
   const getCurrentStepIndex = () => {
@@ -93,7 +119,9 @@ const RouteProgress = ({ parcel, isDemoMode = false }) => {
         {/* Current Status */}
         <div className="mb-6">
           <div className="flex items-center space-x-3 mb-2">
-            <span className="text-2xl">{getStatusIcon(parcel.status)}</span>
+            <div className="text-2xl text-gray-600">
+              {getStatusIcon(parcel.status)}
+            </div>
             <div>
               <h4 className="text-lg font-semibold text-gray-900">
                 {parcel.status.replace('_', ' ').toUpperCase()}
@@ -174,7 +202,9 @@ const RouteProgress = ({ parcel, isDemoMode = false }) => {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <span className="text-lg">{step.icon}</span>
+                    <div className="text-lg text-gray-600">
+                      {step.icon}
+                    </div>
                     <h4 className={`text-sm font-medium ${
                       isCompleted 
                         ? 'text-green-800' 

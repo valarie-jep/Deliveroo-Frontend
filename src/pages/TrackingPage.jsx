@@ -8,6 +8,13 @@ import JourneyMetrics from '../components/JourneyMetrics';
 import LiveTracking from '../components/LiveTracking';
 import { calculateMidpoint, calculateProgressPercentage, calculateEstimatedArrival } from '../utils/distanceCalculator';
 
+// SVG Icons
+const PackageIcon = () => (
+  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+  </svg>
+);
+
 const TrackingPage = () => {
   const { parcelId } = useParams();
   const parcel = useSelector(state => 
@@ -104,7 +111,9 @@ const TrackingPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">📦</div>
+          <div className="text-6xl mb-4 text-gray-400">
+            <PackageIcon />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Parcel Not Found</h2>
           <p className="text-gray-600">The parcel you're looking for doesn't exist.</p>
         </div>
@@ -119,7 +128,9 @@ const TrackingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div className="text-2xl">📦</div>
+              <div className="text-gray-600">
+                <PackageIcon />
+              </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
                   Parcel #{parcel.id} Tracking

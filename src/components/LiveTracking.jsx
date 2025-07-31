@@ -2,6 +2,56 @@ import React, { useState, useEffect, useCallback } from 'react';
 import trackingService from '../services/trackingService';
 import { toast } from 'react-toastify';
 
+// SVG Icons
+const PlayIcon = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+  </svg>
+);
+
+const StopIcon = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+  </svg>
+);
+
+const RefreshIcon = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+  </svg>
+);
+
+const PackageIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+  </svg>
+);
+
+const TruckIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+  </svg>
+);
+
+const ClockIcon = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+  </svg>
+);
+
+const LocationIcon = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+  </svg>
+);
+
 const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
   const [trackingData, setTrackingData] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
@@ -117,12 +167,15 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     setIsDemoMode(true);
     setError(null);
     
-    // Stop any existing tracking
+    // Stop any existing tracking first
     trackingService.stopTracking(parcelId);
     
-    trackingService.startDemo(parcelId, handleTrackingUpdate);
+    // Start demo after a short delay to ensure real tracking is stopped
+    setTimeout(() => {
+      trackingService.startDemo(parcelId, handleTrackingUpdate);
+    }, 100);
     
-    toast.info('�� Demo mode started! Real parcel data is being updated throughout the system.', {
+    toast.info('Demo mode started! Real parcel data is being updated throughout the system.', {
       position: "top-right",
       autoClose: 4000,
     });
@@ -134,15 +187,22 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     setIsDemoMode(false);
     trackingService.stopDemo(parcelId);
     
+    // Restart real tracking if auto-refresh is enabled
+    if (autoRefresh) {
+      setTimeout(() => {
+        startTracking();
+      }, 100);
+    }
+    
     toast.info('Demo mode stopped. Parcel status changes are now permanent in the system.', {
       position: "top-right",
       autoClose: 3000,
     });
-  }, [parcelId]);
+  }, [parcelId, autoRefresh, startTracking]);
 
   // Initialize tracking on mount
   useEffect(() => {
-    if (parcelId && autoRefresh) {
+    if (parcelId && autoRefresh && !isDemoMode) {
       startTracking();
     }
 
@@ -153,7 +213,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
         trackingService.stopDemo(parcelId);
       }
     };
-  }, [parcelId, autoRefresh, startTracking]);
+  }, [parcelId, autoRefresh, startTracking, isDemoMode]);
 
   // Update tracking data when parcel changes
   useEffect(() => {
@@ -207,15 +267,15 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'pending':
-        return '📦';
+        return <PackageIcon />;
       case 'in_transit':
-        return '🚚';
+        return <TruckIcon />;
       case 'delivered':
-        return '✅';
+        return <CheckIcon />;
       case 'cancelled':
-        return '❌';
+        return <StopIcon />;
       default:
-        return '⏳';
+        return <ClockIcon />;
     }
   };
 
@@ -237,7 +297,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
               isTracking ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
             }`}></div>
             <span className="text-sm text-gray-600">
-              {isDemoMode ? '🎬 Demo Mode Active' : isTracking ? 'Live Tracking Active' : 'Tracking Inactive'}
+              {isDemoMode ? 'Demo Mode Active' : isTracking ? 'Live Tracking Active' : 'Tracking Inactive'}
             </span>
           </div>
           {lastUpdate && (
@@ -251,13 +311,14 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
           <button
             onClick={handleManualRefresh}
             disabled={!isTracking}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+            className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center space-x-1 ${
               !isTracking
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
             }`}
           >
-            🔄 Refresh
+            <RefreshIcon />
+            <span>Refresh</span>
           </button>
           
           <button
@@ -277,16 +338,18 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
           {isDemoMode ? (
             <button
               onClick={stopDemo}
-              className="px-3 py-1 text-sm rounded-md bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+              className="px-3 py-1 text-sm rounded-md bg-red-100 text-red-700 hover:bg-red-200 transition-colors flex items-center space-x-1"
             >
-              🛑 Stop Demo
+              <StopIcon />
+              <span>Stop Demo</span>
             </button>
           ) : (
             <button
               onClick={startDemo}
-              className="px-3 py-1 text-sm rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+              className="px-3 py-1 text-sm rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors flex items-center space-x-1"
             >
-              🎬 Start Demo
+              <PlayIcon />
+              <span>Start Demo</span>
             </button>
           )}
         </div>
@@ -312,7 +375,9 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
         <div className="bg-white rounded-lg shadow-sm border p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <span className="text-2xl">{getStatusIcon(trackingData.status)}</span>
+              <div className="text-2xl text-gray-600">
+                {getStatusIcon(trackingData.status)}
+              </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
                   {trackingData.status.replace('_', ' ').toUpperCase()}
