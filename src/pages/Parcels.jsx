@@ -14,13 +14,16 @@ const ParcelCard = ({ parcel }) => {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [selectedParcelForDestination, setSelectedParcelForDestination] = useState(null);
   
-  const handleDestinationConfirm = (newDestination) => {
-    if (selectedParcelForDestination) {
-      dispatch(updateParcelDestination({ parcelId: selectedParcelForDestination.id, newDestination }));
-    }
-    setIsModalOpen(false); 
-    setSelectedParcelForDestination(null); 
-  };
+  const handleDestinationConfirm = ({ newDestinationText }) => {
+  if (selectedParcelForDestination) {
+    dispatch(updateParcelDestination({
+      parcelId: selectedParcelForDestination.id,
+      newDestination: newDestinationText,
+    }));
+  }
+  setIsModalOpen(false); 
+  setSelectedParcelForDestination(null); 
+};
 
   const handleCancel = () => {
     if (
@@ -106,11 +109,14 @@ const ParcelCard = ({ parcel }) => {
       </div>
       {selectedParcelForDestination && ( 
         <DestinationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onConfirm={handleDestinationConfirm}
-          currentDestination={selectedParcelForDestination.destination_location_text}
-        />
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedParcelForDestination(null);
+            }}
+            onConfirm={handleDestinationConfirm}
+            currentDestination={selectedParcelForDestination.destination_location_text}
+          />
       )}
     </div>
   );

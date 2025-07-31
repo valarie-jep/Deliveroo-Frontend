@@ -18,7 +18,7 @@ const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) =>
     if (isOpen) {
       setDestinationText(currentDestination || '');
       
-      setDestinationCoords(null);
+      setDestinationCoords(null||'');
     }
   }, [isOpen, currentDestination]);
 

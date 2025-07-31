@@ -20,6 +20,14 @@ const RegisterForm = ({
         error={errors.name}
       />
       <InputField
+        label="Username"
+        type="text"
+        name="name"
+        value={formData.username}
+        onChange={handleChange}
+        error={errors.username}
+      />
+      <InputField
         label="Email Address"
         type="email"
         name="email"

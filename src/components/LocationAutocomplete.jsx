@@ -55,15 +55,31 @@ const LocationAutocomplete = ({
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setInputValue(suggestion.description);
-    onChange(suggestion.description);
-    setShowSuggestions(false);
-    setSuggestions([]);
+  setInputValue(suggestion.description);
+  onChange(suggestion.description);
+  setShowSuggestions(false);
+  setSuggestions([]);
 
-    if (onLocationSelect) {
-      onLocationSelect(suggestion);
-    }
-  };
+  if (onLocationSelect && placesService.current) {
+    placesService.current.getDetails(
+      { placeId: suggestion.place_id },
+      (place, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+          const lat = place.geometry?.location?.lat();
+          const lng = place.geometry?.location?.lng();
+
+          onLocationSelect({
+            address: place.formatted_address || suggestion.description,
+            lat,
+            lng
+          });
+        } else {
+          console.error("PlacesServiceStatus Error:", status);
+        }
+      }
+    );
+  }
+};
 
   const handleInputFocus = () => {
     if (suggestions.length > 0) {

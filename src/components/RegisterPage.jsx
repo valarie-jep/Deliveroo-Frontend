@@ -51,7 +51,7 @@ const RegisterPage = () => {
   }
 
   // Password validation
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
   if (!formData.password) {
     newErrors.password = "Password is required";
   } else if (!passwordRegex.test(formData.password)) {
