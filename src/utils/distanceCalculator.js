@@ -58,8 +58,20 @@ export const calculateCurrentPosition = (pickup, destination, progressPercentage
   };
 };
 
-// Calculate progress percentage based on status
-export const calculateProgressPercentage = (status) => {
+// Calculate progress percentage based on status or parcel object
+export const calculateProgressPercentage = (parcelOrStatus) => {
+  // If it's a parcel object, use the progress field or status
+  if (typeof parcelOrStatus === 'object' && parcelOrStatus !== null) {
+    // Use the progress field if available (from tracking updates)
+    if (parcelOrStatus.progress !== undefined) {
+      return parcelOrStatus.progress;
+    }
+    // Fallback to status-based progress
+    return calculateProgressPercentage(parcelOrStatus.status);
+  }
+  
+  // If it's just a status string
+  const status = parcelOrStatus;
   switch (status) {
     case 'pending':
       return 0;

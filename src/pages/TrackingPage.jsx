@@ -100,6 +100,7 @@ const TrackingPage = () => {
 
   // Handle tracking updates from LiveTracking component
   const handleTrackingUpdate = useCallback((trackingData) => {
+    console.log('🔄 Tracking update received:', trackingData);
     
     // Update current parcel with new tracking data
     const updatedParcel = {
@@ -111,6 +112,7 @@ const TrackingPage = () => {
       progress: trackingData.progress
     };
     
+    console.log('📦 Updated parcel data:', updatedParcel);
     setCurrentParcel(updatedParcel);
     setIsDemoMode(trackingData.isDemoMode || false);
 

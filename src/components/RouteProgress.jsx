@@ -34,6 +34,8 @@ const StopIcon = () => (
 );
 
 const RouteProgress = ({ parcel, isDemoMode = false }) => {
+  console.log('📈 RouteProgress received parcel:', parcel);
+  
   if (!parcel) {
     return (
       <div className="bg-white rounded-lg shadow-sm border p-4">
@@ -43,6 +45,7 @@ const RouteProgress = ({ parcel, isDemoMode = false }) => {
   }
 
   const progress = calculateProgressPercentage(parcel);
+  console.log('📈 Calculated progress:', progress);
   const estimatedArrival = calculateEstimatedArrival(parcel);
   const timeRemaining = formatTimeRemaining(estimatedArrival);
 

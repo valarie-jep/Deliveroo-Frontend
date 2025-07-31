@@ -4,46 +4,53 @@ import { GoogleMap, Marker, InfoWindow, Polyline, useLoadScript } from '@react-g
 const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [routePath, setRoutePath] = useState([]);
+  const [currentPosition, setCurrentPosition] = useState(null);
 
   // Check if Google Maps is loaded
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
   });
 
-  // Calculate current position based on parcel status
+  // Calculate current position based on parcel status and progress
   const calculateCurrentPosition = useCallback((parcelData) => {
     if (!parcelData) return null;
 
     try {
-      const pickupCoords = parcelData.pickup_location_coordinates ? 
-        JSON.parse(parcelData.pickup_location_coordinates) : null;
-      const destinationCoords = parcelData.destination_location_coordinates ? 
-        JSON.parse(parcelData.destination_location_coordinates) : null;
+      const pickupCoords = getPickupCoordinates();
+      const destinationCoords = getDestinationCoordinates();
 
       if (!pickupCoords || !destinationCoords) return null;
 
-      // Calculate progress based on status
+      // Use progress from parcel data if available, otherwise calculate from status
       let progress = 0;
-      switch (parcelData.status) {
-        case 'pending':
-          progress = 0.1; // Just started
-          break;
-        case 'in_transit':
-          progress = 0.5; // Halfway
-          break;
-        case 'delivered':
-          progress = 1.0; // Completed
-          break;
-        default:
-          progress = 0.1;
+      if (parcelData.progress !== undefined) {
+        progress = parcelData.progress / 100; // Convert percentage to decimal
+      } else {
+        // Calculate progress based on status
+        switch (parcelData.status) {
+          case 'pending':
+            progress = 0.1; // Just started
+            break;
+          case 'in_transit':
+            progress = 0.5; // Halfway
+            break;
+          case 'delivered':
+            progress = 1.0; // Completed
+            break;
+          default:
+            progress = 0.1;
+        }
       }
 
       // Calculate current position along the route
       const lat = pickupCoords.lat + (destinationCoords.lat - pickupCoords.lat) * progress;
       const lng = pickupCoords.lng + (destinationCoords.lng - pickupCoords.lng) * progress;
 
-      // Add small random offset for more realistic movement
-      const randomOffset = (Math.random() - 0.5) * 0.001;
+      // Add small random offset for more realistic movement in demo mode
+      let randomOffset = 0;
+      if (isDemoMode) {
+        randomOffset = (Math.random() - 0.5) * 0.0005; // Smaller offset for smoother movement
+      }
       
       return {
         lat: lat + randomOffset,
@@ -53,40 +60,32 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
       console.error('Error calculating current position:', error);
       return null;
     }
-  }, []);
+  }, [isDemoMode]);
+
+  // Update current position and route path when parcel data changes
+  useEffect(() => {
+    if (parcel) {
+      const newRoutePath = generateRoutePath(parcel);
+      setRoutePath(newRoutePath);
+      
+      const newCurrentPosition = calculateCurrentPosition(parcel);
+      setCurrentPosition(newCurrentPosition);
+      
+      console.log('🗺️ Map updated:', {
+        routePath: newRoutePath.length,
+        currentPosition: newCurrentPosition,
+        parcelProgress: parcel.progress
+      });
+    }
+  }, [parcel, generateRoutePath, calculateCurrentPosition]);
 
   // Generate route path with intermediate points
   const generateRoutePath = useCallback((parcelData) => {
     if (!parcelData) return [];
 
     try {
-      // Try to get coordinates from different possible sources
-      let pickupCoords = null;
-      let destinationCoords = null;
-
-      // Try pickup_location_coordinates first
-      if (parcelData.pickup_location_coordinates) {
-        pickupCoords = JSON.parse(parcelData.pickup_location_coordinates);
-      }
-      // Fallback to individual lat/lng fields
-      else if (parcelData.pick_up_latitude && parcelData.pick_up_longitude) {
-        pickupCoords = {
-          lat: parseFloat(parcelData.pick_up_latitude),
-          lng: parseFloat(parcelData.pick_up_longitude)
-        };
-      }
-
-      // Try destination_location_coordinates first
-      if (parcelData.destination_location_coordinates) {
-        destinationCoords = JSON.parse(parcelData.destination_location_coordinates);
-      }
-      // Fallback to individual lat/lng fields
-      else if (parcelData.destination_latitude && parcelData.destination_longitude) {
-        destinationCoords = {
-          lat: parseFloat(parcelData.destination_latitude),
-          lng: parseFloat(parcelData.destination_longitude)
-        };
-      }
+      const pickupCoords = getPickupCoordinates();
+      const destinationCoords = getDestinationCoordinates();
 
       if (!pickupCoords || !destinationCoords) {
         console.log('Missing coordinates:', { pickupCoords, destinationCoords });
@@ -97,7 +96,7 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
 
       // Create intermediate points for smoother route
       const points = [];
-      const steps = 20; // More points for smoother line
+      const steps = 50; // More points for smoother line
       
       for (let i = 0; i <= steps; i++) {
         const progress = i / steps;
@@ -283,6 +282,26 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
         featureType: 'poi',
         elementType: 'labels',
         stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'transit',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'landscape',
+        elementType: 'geometry',
+        stylers: [{ color: '#f5f5f5' }]
+      },
+      {
+        featureType: 'road',
+        elementType: 'geometry',
+        stylers: [{ color: '#ffffff' }]
+      },
+      {
+        featureType: 'road',
+        elementType: 'labels.text.fill',
+        stylers: [{ color: '#7c7c7c' }]
       }
     ]
   };
@@ -322,14 +341,14 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
         )}
 
         {/* Current Position Marker */}
-        {isDemoMode && routePath.length > 1 && (
+        {currentPosition && (
           <Marker
-            position={routePath[Math.floor(routePath.length * 0.5)]} // Show at 50% progress
+            position={currentPosition}
             icon={createMarkerIcon('blue', '🚚')}
             label="Current"
             onClick={() => setSelectedMarker({ 
               type: 'current', 
-              position: routePath[Math.floor(routePath.length * 0.5)] 
+              position: currentPosition 
             })}
           />
         )}
@@ -351,8 +370,9 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
         {routePath.length > 1 && (
           <Polyline
             path={routePath.filter((_, index) => {
-              // Show progress based on demo mode or parcel status
-              const progress = isDemoMode ? 0.5 : 
+              // Use actual progress from parcel data
+              const progress = parcel?.progress !== undefined ? 
+                parcel.progress / 100 : 
                 parcel?.status === 'delivered' ? 1.0 :
                 parcel?.status === 'in_transit' ? 0.7 :
                 parcel?.status === 'pending' ? 0.2 : 0.1;
@@ -384,31 +404,54 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
 
       {/* Demo Mode Indicator */}
       {isDemoMode && (
-        <div className="absolute top-4 right-4 bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+        <div className="absolute top-4 right-4 bg-purple-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
           🎬 Demo Mode
+          {parcel?.progress !== undefined && (
+            <span className="ml-2 text-xs bg-purple-600 px-2 py-1 rounded">
+              {parcel.progress}%
+            </span>
+          )}
         </div>
       )}
 
       {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-lg p-3 shadow-lg">
-        <h4 className="text-xs font-medium text-gray-900 mb-2">Map Legend</h4>
-        <div className="space-y-1 text-xs">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span className="text-gray-600">Pickup</span>
+      <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 rounded-lg p-4 shadow-lg border">
+        <h4 className="text-sm font-semibold text-gray-900 mb-3">Map Legend</h4>
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">📦</span>
+            </div>
+            <span className="text-gray-700 font-medium">Pickup Location</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <span className="text-gray-600">Destination</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">🏠</span>
+            </div>
+            <span className="text-gray-700 font-medium">Destination</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            <span className="text-gray-600">Current Position</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">🚚</span>
+            </div>
+            <span className="text-gray-700 font-medium">Current Position</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-1 bg-green-500 rounded-full"></div>
-            <span className="text-gray-600">Progress Line</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-1 bg-blue-500 rounded-full"></div>
+            <span className="text-gray-700 font-medium">Route Path</span>
           </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-1 bg-green-500 rounded-full"></div>
+            <span className="text-gray-700 font-medium">Progress Line</span>
+          </div>
+          {parcel?.progress !== undefined && (
+            <div className="pt-2 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Progress:</span>
+                <span className="font-semibold text-green-600">{parcel.progress}%</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
