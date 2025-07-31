@@ -109,6 +109,33 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     });
   }, []);
 
+  // Initialize tracking on mount
+  useEffect(() => {
+    if (parcelId && autoRefresh && !isDemoMode) {
+      startTracking();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (parcelId) {
+        trackingService.stopAllTracking(parcelId);
+      }
+    };
+  }, [parcelId, autoRefresh, startTracking, isDemoMode]);
+
+  // Update tracking data when parcel changes
+  useEffect(() => {
+    if (parcel) {
+      setTrackingData({
+        status: parcel.status,
+        current_location: parcel.pickup_location_text || 'Location not specified',
+        estimated_delivery: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+        last_updated: new Date().toISOString(),
+        progress: 0
+      });
+    }
+  }, [parcel]);
+
   // Start tracking
   const startTracking = useCallback(() => {
     if (!parcelId) return;
@@ -128,8 +155,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     console.log('🛑 Stopping live tracking for parcel:', parcelId);
     setIsTracking(false);
     setIsDemoMode(false);
-    trackingService.stopTracking(parcelId);
-    trackingService.stopDemo(parcelId);
+    trackingService.stopAllTracking(parcelId);
   }, [parcelId]);
 
   // Manual refresh
@@ -162,18 +188,16 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
 
   // Start demo mode
   const startDemo = useCallback(() => {
-    console.log('🎬 Starting enhanced demo mode');
+    console.log('🎬 Starting demo mode');
     setIsTracking(true);
     setIsDemoMode(true);
     setError(null);
     
     // Stop any existing tracking first
-    trackingService.stopTracking(parcelId);
+    trackingService.stopAllTracking(parcelId);
     
-    // Start demo after a short delay to ensure real tracking is stopped
-    setTimeout(() => {
-      trackingService.startDemo(parcelId, handleTrackingUpdate);
-    }, 100);
+    // Start demo
+    trackingService.startDemo(parcelId, handleTrackingUpdate);
     
     toast.info('Demo mode started! Real parcel data is being updated throughout the system.', {
       position: "top-right",
@@ -199,34 +223,6 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
       autoClose: 3000,
     });
   }, [parcelId, autoRefresh, startTracking]);
-
-  // Initialize tracking on mount
-  useEffect(() => {
-    if (parcelId && autoRefresh && !isDemoMode) {
-      startTracking();
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (parcelId) {
-        trackingService.stopTracking(parcelId);
-        trackingService.stopDemo(parcelId);
-      }
-    };
-  }, [parcelId, autoRefresh, startTracking, isDemoMode]);
-
-  // Update tracking data when parcel changes
-  useEffect(() => {
-    if (parcel) {
-      setTrackingData({
-        status: parcel.status,
-        current_location: parcel.pickup_location_text || 'Location not specified',
-        estimated_delivery: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 0
-      });
-    }
-  }, [parcel]);
 
   const formatTimeRemaining = (estimatedDate) => {
     if (!estimatedDate) return 'Calculating...';

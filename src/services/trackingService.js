@@ -3,344 +3,184 @@ import { updateParcelStatus } from '../redux/parcelSlice';
 
 class TrackingService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || '';
-    this.activeTrackers = new Map();
+    this.trackingIntervals = new Map();
     this.demoIntervals = new Map();
+    this.isTracking = new Map(); // Track if real tracking is active
+    this.isDemoActive = new Map(); // Track if demo is active
   }
 
-  // Get JWT token from localStorage
-  getAuthToken() {
-    return localStorage.getItem('token') || '';
-  }
-
-  // Start real-time tracking for a parcel
+  // Start real-time tracking
   startTracking(parcelId, onUpdate, onError) {
-    if (this.activeTrackers.has(parcelId)) {
-      console.log(`Tracking already active for parcel ${parcelId}`);
+    console.log('🚀 Starting real-time tracking for parcel', parcelId);
+    
+    // Don't start if demo is active
+    if (this.isDemoActive.get(parcelId)) {
+      console.log('⚠️ Demo is active, skipping real tracking start');
       return;
     }
 
-    console.log(`🚀 Starting real-time tracking for parcel ${parcelId}`);
-
-    const tracker = {
-      parcelId,
-      isTracking: true,
-      pollInterval: null,
-      onUpdate,
-      onError,
-      lastUpdate: null
-    };
-
-    // Start polling immediately
-    this.updateTrackingData(tracker);
+    // Stop any existing tracking first
+    this.stopTracking(parcelId);
     
-    // Set up polling interval (30 seconds)
-    tracker.pollInterval = setInterval(() => {
-      this.updateTrackingData(tracker);
-    }, 30000);
+    this.isTracking.set(parcelId, true);
+    this.isDemoActive.set(parcelId, false);
 
-    this.activeTrackers.set(parcelId, tracker);
-    return tracker;
-  }
+    // Initial fetch
+    this.fetchTrackingData(parcelId, onUpdate, onError);
 
-  // Stop tracking for a parcel
-  stopTracking(parcelId) {
-    const tracker = this.activeTrackers.get(parcelId);
-    if (tracker) {
-      console.log(`🛑 Stopping tracking for parcel ${parcelId}`);
-      tracker.isTracking = false;
-      if (tracker.pollInterval) {
-        clearInterval(tracker.pollInterval);
+    // Set up polling interval
+    const interval = setInterval(() => {
+      if (this.isTracking.get(parcelId) && !this.isDemoActive.get(parcelId)) {
+        this.fetchTrackingData(parcelId, onUpdate, onError);
       }
-      this.activeTrackers.delete(parcelId);
-    }
-    
-    // Also stop any demo for this parcel
-    this.stopDemo(parcelId);
+    }, 30000); // Poll every 30 seconds
+
+    this.trackingIntervals.set(parcelId, interval);
   }
 
-  // Update tracking data for a specific tracker
-  async updateTrackingData(tracker) {
+  // Stop real-time tracking
+  stopTracking(parcelId) {
+    console.log('🛑 Stopping tracking for parcel', parcelId);
+    
+    this.isTracking.set(parcelId, false);
+    
+    const interval = this.trackingIntervals.get(parcelId);
+    if (interval) {
+      clearInterval(interval);
+      this.trackingIntervals.delete(parcelId);
+    }
+  }
+
+  // Stop demo mode
+  stopDemo(parcelId) {
+    console.log('🛑 Stopping demo for parcel', parcelId);
+    
+    this.isDemoActive.set(parcelId, false);
+    
+    const interval = this.demoIntervals.get(parcelId);
+    if (interval) {
+      clearInterval(interval);
+      this.demoIntervals.delete(parcelId);
+    }
+  }
+
+  // Fetch tracking data from API
+  async fetchTrackingData(parcelId, onUpdate, onError) {
+    console.log('📡 Fetching tracking data for parcel', parcelId);
+    
     try {
-      console.log(`📡 Fetching tracking data for parcel ${tracker.parcelId}`);
-      
-      const response = await fetch(`${this.baseURL}/tracking/${tracker.parcelId}/live`, {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/tracking/${parcelId}/live`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.getAuthToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      tracker.lastUpdate = new Date();
+      console.log('✅ Tracking data received:', data);
       
-      console.log(`✅ Tracking data received:`, data);
-      
-      // Call the update callback
-      if (tracker.onUpdate) {
-        tracker.onUpdate(data.live_tracking || data);
+      if (onUpdate) {
+        onUpdate(data);
       }
-
     } catch (error) {
-      console.error(`❌ Error updating tracking for parcel ${tracker.parcelId}:`, error);
-      
-      // Call the error callback
-      if (tracker.onError) {
-        tracker.onError(error);
+      console.error('❌ Error fetching tracking data:', error);
+      if (onError) {
+        onError(error);
       }
     }
   }
 
-  // Manual refresh for a specific parcel
+  // Manual refresh
   async refreshTracking(parcelId) {
-    const tracker = this.activeTrackers.get(parcelId);
-    if (tracker) {
-      await this.updateTrackingData(tracker);
-    }
+    return new Promise((resolve, reject) => {
+      this.fetchTrackingData(parcelId, resolve, reject);
+    });
   }
 
-  // Get current tracking status
-  getTrackingStatus(parcelId) {
-    const tracker = this.activeTrackers.get(parcelId);
-    return tracker ? {
-      isTracking: tracker.isTracking,
-      lastUpdate: tracker.lastUpdate
-    } : null;
-  }
-
-  // Stop all active tracking
-  stopAllTracking() {
-    console.log('🛑 Stopping all active tracking');
-    for (const [parcelId] of this.activeTrackers) {
-      this.stopTracking(parcelId);
-    }
-  }
-
-  // Update parcel status in backend
-  async updateParcelStatusInBackend(parcelId, status, additionalData = {}) {
-    try {
-      console.log(`🔄 Updating parcel ${parcelId} status to ${status} in backend`);
-      
-      const response = await fetch(`${this.baseURL}/parcels/${parcelId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${this.getAuthToken()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          status,
-          current_location: additionalData.current_location,
-          estimated_delivery: additionalData.estimated_delivery,
-          last_updated: new Date().toISOString(),
-          ...additionalData
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const updatedParcel = await response.json();
-      console.log(`✅ Parcel status updated in backend:`, updatedParcel);
-      
-      // Update Redux store
-      store.dispatch(updateParcelStatus({
-        parcelId: parseInt(parcelId),
-        status,
-        current_location: additionalData.current_location,
-        estimated_delivery: additionalData.estimated_delivery,
-        last_updated: new Date().toISOString(),
-        ...additionalData
-      }));
-
-      return updatedParcel;
-    } catch (error) {
-      console.error(`❌ Error updating parcel status in backend:`, error);
-      throw error;
-    }
-  }
-
-  // Enhanced demo mode that updates real data
+  // Start demo mode
   startDemo(parcelId, onUpdate) {
-    console.log('🎬 Starting enhanced demo mode with real data updates');
+    console.log('🎬 Starting demo mode for real-time tracking');
     
-    // Stop any existing tracking and demo for this parcel
+    // Stop any existing tracking and demo
     this.stopTracking(parcelId);
     this.stopDemo(parcelId);
     
+    // Set demo as active
+    this.isDemoActive.set(parcelId, true);
+    this.isTracking.set(parcelId, false);
+
     const demoUpdates = [
-      { 
-        status: 'pending', 
-        current_location: 'Warehouse - Sorting Center',
-        estimated_delivery: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 0,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'pending', 
-        current_location: 'Loading Dock - Ready for Pickup',
-        estimated_delivery: new Date(Date.now() + 47 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 5,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'pending', 
-        current_location: 'Courier Assigned - En Route to Pickup',
-        estimated_delivery: new Date(Date.now() + 46 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 10,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'in_transit', 
-        current_location: 'Picked up from sender',
-        estimated_delivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 25,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'in_transit', 
-        current_location: 'In transit - Nairobi Central',
-        estimated_delivery: new Date(Date.now() + 20 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 35,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'in_transit', 
-        current_location: 'In transit - Thika Road',
-        estimated_delivery: new Date(Date.now() + 16 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 45,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'in_transit', 
-        current_location: 'In transit - Juja Junction',
-        estimated_delivery: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 55,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'in_transit', 
-        current_location: 'In transit - Thika Town Center',
-        estimated_delivery: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 65,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'in_transit', 
-        current_location: 'Approaching destination',
-        estimated_delivery: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 75,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'in_transit', 
-        current_location: 'Out for delivery',
-        estimated_delivery: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 85,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      },
-      { 
-        status: 'delivered', 
-        current_location: 'Delivered to recipient',
-        estimated_delivery: new Date().toISOString(),
-        last_updated: new Date().toISOString(),
-        progress: 100,
-        map_position: { lat: -1.286389, lng: 36.817223 }
-      }
+      { status: 'pending', current_location: 'Warehouse - Sorting Center', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 10, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'pending', current_location: 'Loading Dock - Ready for Pickup', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 20, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'pending', current_location: 'Courier Assigned - En Route to Pickup', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 30, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'in_transit', current_location: 'Picked up from sender', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 40, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'in_transit', current_location: 'In transit - Nairobi Central', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 50, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'in_transit', current_location: 'In transit - Thika Road', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 60, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'in_transit', current_location: 'In transit - Juja Junction', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 70, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'in_transit', current_location: 'Thika Town Center', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 80, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'in_transit', current_location: 'Approaching destination', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 90, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'in_transit', current_location: 'Out for delivery', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 95, map_position: { lat: -1.0352887, lng: 37.077005 } },
+      { status: 'delivered', current_location: 'Delivered to recipient', estimated_delivery: '2025-02-08T19:40:24Z', last_updated: new Date().toISOString(), progress: 100, map_position: { lat: -0.08193009999999999, lng: 34.7285916 } }
     ];
 
     let updateIndex = 0;
-    const demoInterval = setInterval(async () => {
+    const demoInterval = setInterval(() => {
       if (updateIndex < demoUpdates.length) {
         const update = demoUpdates[updateIndex];
         console.log(`🎬 Demo update ${updateIndex + 1}:`, update);
         
-        // Add some randomness to make it more realistic
-        const randomOffset = (Math.random() - 0.5) * 0.001;
-        update.map_position = {
-          lat: update.map_position.lat + randomOffset,
-          lng: update.map_position.lng + randomOffset
-        };
-        
-        try {
-          // Try to update the real parcel data in backend and Redux store
-          await this.updateParcelStatusInBackend(parcelId, update.status, {
-            current_location: update.current_location,
-            estimated_delivery: update.estimated_delivery,
-            progress: update.progress,
-            map_position: update.map_position
-          });
-          
-          console.log(`✅ Successfully updated parcel ${parcelId} status to ${update.status}`);
-        } catch (error) {
-          console.error('❌ Error updating parcel status in backend:', error);
-          console.log('🔄 Falling back to frontend-only demo mode');
-          
-          // Fallback: Update only Redux store (frontend-only demo)
-          store.dispatch(updateParcelStatus({
-            parcelId: parseInt(parcelId),
-            status: update.status,
-            current_location: update.current_location,
-            estimated_delivery: update.estimated_delivery,
-            last_updated: new Date().toISOString(),
-            progress: update.progress,
-            map_position: update.map_position
-          }));
-        }
-        
-        // Call the update callback with the new data
+        // Update Redux store
+        store.dispatch(updateParcelStatus({
+          parcelId: parseInt(parcelId),
+          status: update.status,
+          current_location: update.current_location,
+          estimated_delivery: update.estimated_delivery,
+          last_updated: update.last_updated,
+          progress: update.progress,
+          map_position: update.map_position
+        }));
+
+        // Call update callback
         if (onUpdate) {
-          onUpdate({
-            ...update,
-            parcelId,
-            isDemoMode: true
-          });
+          onUpdate(update);
         }
-        
+
         updateIndex++;
       } else {
         clearInterval(demoInterval);
         this.demoIntervals.delete(parcelId);
-        console.log('✅ Demo completed! Parcel status has been updated throughout the system.');
+        this.isDemoActive.set(parcelId, false);
+        console.log('✅ Demo completed!');
       }
-    }, 5000); // Update every 5 seconds for demo
+    }, 5000); // Update every 5 seconds
 
     this.demoIntervals.set(parcelId, demoInterval);
-    return demoInterval;
   }
 
-  // Stop demo for a specific parcel
-  stopDemo(parcelId) {
-    const demoInterval = this.demoIntervals.get(parcelId);
-    if (demoInterval) {
-      clearInterval(demoInterval);
-      this.demoIntervals.delete(parcelId);
-      console.log(`🛑 Stopped demo for parcel ${parcelId}`);
-    }
+  // Stop all tracking for a parcel
+  stopAllTracking(parcelId) {
+    this.stopTracking(parcelId);
+    this.stopDemo(parcelId);
   }
 
-  // Stop all demos
-  stopAllDemos() {
-    console.log('🛑 Stopping all demos');
-    for (const [parcelId, interval] of this.demoIntervals) {
-      clearInterval(interval);
-    }
-    this.demoIntervals.clear();
+  // Check if tracking is active
+  isTrackingActive(parcelId) {
+    return this.isTracking.get(parcelId) || this.isDemoActive.get(parcelId);
+  }
+
+  // Check if demo is active
+  isDemoActive(parcelId) {
+    return this.isDemoActive.get(parcelId);
   }
 }
 
