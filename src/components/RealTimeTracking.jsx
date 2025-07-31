@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getParcels } from '../redux/parcelSlice';
 import TrackingStatus from './TrackingStatus';
 import { toast } from 'react-toastify';
+import store from '../redux/store';
 
 const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 30000 }) => {
   const dispatch = useDispatch();
@@ -24,7 +25,7 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
       await dispatch(getParcels()).unwrap();
       setLastUpdate(new Date());
       
-      const state = dispatch.getState();
+      const state = store.getState();
       const updatedParcel = state.parcels.list.find(p => String(p.id) === String(parcelId));
       
       if (updatedParcel && updatedParcel.status) {
