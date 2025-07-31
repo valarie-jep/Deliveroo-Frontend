@@ -34,6 +34,7 @@ const Navbar = () => {
               
               <Link to="/parcels" className={styles.link}>My Parcels</Link>
               <Link to="/profile" className={styles.link}>Profile</Link>
+              <Link to="/email-settings" className={styles.link}>Email Settings</Link>
               <button onClick={handleLogout} className={styles.link} style={{background: 'none', border: 'none', cursor: 'pointer', padding: 0}}>Logout</button>
             </>
           )}
