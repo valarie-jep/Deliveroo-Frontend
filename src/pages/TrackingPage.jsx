@@ -149,25 +149,25 @@ const TrackingPage = () => {
       
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4">
                 <div className="text-gray-600">
                   <PackageIcon />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
+                  <h1 className="text-3xl font-bold text-gray-900">
                     Parcel #{parcel.id} Tracking
                   </h1>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-base text-gray-600 mt-1">
                     {parcel.pickup_location_text} → {parcel.destination_location_text}
                   </p>
                 </div>
               </div>
               
               {/* Status Badge */}
-              <span className={`px-3 py-1 rounded-full text-sm font-medium text-white ${
+              <span className={`px-4 py-2 rounded-full text-sm font-semibold text-white ${
                 parcel.status === 'delivered' ? 'bg-green-500' :
                 parcel.status === 'in_transit' ? 'bg-blue-500' :
                 'bg-yellow-500'
@@ -177,17 +177,17 @@ const TrackingPage = () => {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <Link 
                 to="/parcels" 
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 ← Back to Parcels
               </Link>
               
               {/* Demo Mode Indicator */}
               {isDemoMode && (
-                <div className="flex items-center space-x-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
+                <div className="flex items-center space-x-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full">
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium">Demo Mode</span>
                 </div>
@@ -197,26 +197,11 @@ const TrackingPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Tab Navigation */}
-        <div className="mb-6">
-          <nav className="flex space-x-8">
-            <button className="text-blue-600 border-b-2 border-blue-600 py-2 px-1 text-sm font-medium">
-              Live Tracking
-            </button>
-            <button className="text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
-              Journey Details
-            </button>
-            <button className="text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
-              Location Map
-            </button>
-          </nav>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
           {/* Left Column - Live Tracking */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="xl:col-span-1 space-y-8">
             <LiveTracking 
               parcelId={parcelId} 
               parcel={currentParcel}
@@ -225,16 +210,16 @@ const TrackingPage = () => {
           </div>
 
           {/* Right Column - Map and Metrics */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="xl:col-span-3 space-y-8">
             {/* Map */}
-            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-              <div className="p-4 border-b bg-gray-50">
-                <h3 className="text-lg font-medium text-gray-900">Location Map</h3>
-                <p className="text-sm text-gray-600 mt-1">
+            <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
+              <div className="p-6 border-b bg-gray-50">
+                <h3 className="text-xl font-semibold text-gray-900">Location Map</h3>
+                <p className="text-sm text-gray-600 mt-2">
                   Real-time location tracking and route visualization
                 </p>
               </div>
-              <div className="h-96">
+              <div className="h-[500px]">
                 <TrackingMap 
                   parcel={currentParcel}
                   center={mapCenter}
@@ -245,20 +230,20 @@ const TrackingPage = () => {
             </div>
 
             {/* Progress and Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <RouteProgress parcel={currentParcel} isDemoMode={isDemoMode} />
               <JourneyMetrics parcel={currentParcel} isDemoMode={isDemoMode} />
             </div>
 
             {/* Real-time Updates */}
-            <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-4 border-b bg-gray-50">
-                <h3 className="text-lg font-medium text-gray-900">Real-time Updates</h3>
-                <p className="text-sm text-gray-600 mt-1">
+            <div className="bg-white rounded-xl shadow-lg border">
+              <div className="p-6 border-b bg-gray-50">
+                <h3 className="text-xl font-semibold text-gray-900">Real-time Updates</h3>
+                <p className="text-sm text-gray-600 mt-2">
                   Latest tracking information and status updates
                 </p>
               </div>
-              <div className="p-4">
+              <div className="p-6">
                 <RealTimeTracking parcelId={parcelId} isDemoMode={isDemoMode} />
               </div>
             </div>
