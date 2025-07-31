@@ -60,23 +60,22 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     console.log('📡 Live tracking update received:', data);
     
     setTrackingData(data);
-    setLastUpdate(new Date());
+    setLastUpdate(new Date().toISOString());
     setError(null);
 
     // Add to recent updates
     const update = {
-      id: Date.now(),
-      timestamp: new Date(),
-      status: data.status,
-      location: data.current_location,
-      message: `Status updated to ${data.status.replace('_', ' ').toUpperCase()}`,
+      timestamp: new Date().toISOString(),
+      status: data.status || 'unknown',
+      location: data.current_location || 'Location not specified',
+      message: `Status updated to ${(data.status || 'unknown').replace('_', ' ').toUpperCase()}`,
       progress: data.progress || 0
     };
 
     setRecentUpdates(prev => [update, ...prev.slice(0, 9)]); // Keep last 10 updates
 
     // Show toast notification for status changes
-    if (data.status !== parcel?.status) {
+    if (data.status && data.status !== parcel?.status) {
       toast.info(`Parcel ${parcelId} status: ${data.status.replace('_', ' ').toUpperCase()}`, {
         position: "top-right",
         autoClose: 3000,

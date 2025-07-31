@@ -96,96 +96,68 @@ const ParcelForm = ({ setSuccess }) => {
     hasValidApiKey,
   ]);
 
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-      if (setSuccess) setSuccess(null);
-      setError(null);
+    console.log('📝 Starting parcel creation...');
+    console.log('📍 Pickup coordinates:', pickupCoords);
+    console.log('🎯 Destination coordinates:', destinationCoords);
+    console.log('📦 Form data:', {
+      sender_name,
+      recipient_name,
+      description,
+      weight,
+      pickup_location_text,
+      destination_location_text
+    });
 
-      if (!user || !user.id) {
-        setError("User not found. Please log in again.");
-        toast.error("User not found. Please log in again.");
-        navigate("/login");
-        return;
-      }
-
-      const validationError = validateInputs();
-      if (validationError) {
-        setError(validationError);
-        toast.error(validationError);
-        return;
-      }
-
-      // Submit formatted addresses with coordinates
+    try {
       const parcelData = {
-        pickup_location_text: pickup,
-        destination_location_text: destination,
+        sender_name,
+        recipient_name,
+        description,
         pick_up_latitude: pickupCoords ? pickupCoords.lat : null,
         pick_up_longitude: pickupCoords ? pickupCoords.lng : null,
         destination_latitude: destinationCoords ? destinationCoords.lat : null,
         destination_longitude: destinationCoords ? destinationCoords.lng : null,
         weight: weight ? Number(weight) : undefined,
-        description,
-        sender_name: senderName,
-        sender_phone_number: senderPhone,
-        recipient_name: recipientName,
-        recipient_phone_number: recipientPhone,
+        pickup_location_text,
+        destination_location_text,
       };
 
-      console.log('Submitting parcel data:', parcelData);
+      console.log('📤 Submitting parcel data:', parcelData);
 
-      try {
-        const result = await dispatch(createParcel(parcelData)).unwrap();
-        if (setSuccess) setSuccess("Parcel created successfully!");
-        toast.success("Parcel created successfully!");
-        setPickup("");
-        setPickupCoords(null);
-        setDestination("");
-        setDestinationCoords(null);
-        setWeight("");
-        setDescription("");
-        setSenderName("");
-        setSenderPhone("");
-        setRecipientName("");
-        setRecipientPhone("");
-        setTimeout(
-          () =>
-            navigate(`/tracking/${result.id}`, {
-              state: { trackingId: result.id },
-            }),
-          300
-        );
-      } catch (err) {
-        console.error('Parcel creation failed:', err);
-        const errorMessage = err?.message || err?.error || "Failed to create parcel.";
-        setError(errorMessage);
-        toast.error(errorMessage);
-        
-        // If it's a 500 error, suggest retrying
-        if (err?.message?.includes('500') || err?.message?.includes('Backend server error')) {
-          toast.info('The server is experiencing issues. Please try again in a few moments.');
-        }
-      }
-    },
-    [
-      dispatch,
-      navigate,
-      user,
-      pickup,
-      destination,
-      pickupCoords,
-      destinationCoords,
-      weight,
-      description,
-      senderName,
-      senderPhone,
-      recipientName,
-      recipientPhone,
-      setSuccess,
-      validateInputs,
-    ]
-  );
+      const result = await dispatch(createParcel(parcelData)).unwrap();
+      
+      console.log('✅ Parcel created successfully:', result);
+      console.log('🆔 New parcel ID:', result.id);
+
+      if (setSuccess) setSuccess('Parcel created successfully!');
+      
+      // Reset form
+      setSenderName('');
+      setRecipientName('');
+      setDescription('');
+      setWeight('');
+      setPickupLocationText('');
+      setDestinationLocationText('');
+      setPickupCoords(null);
+      setDestinationCoords(null);
+      
+      // Navigate to tracking page
+      navigate(`/tracking/${result.id}`, {
+        state: { message: 'Parcel created successfully!' }
+      });
+      
+    } catch (err) {
+      console.error('❌ Parcel creation failed:', err);
+      setError(err.message || 'Failed to create parcel');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <LoadScript

@@ -151,41 +151,58 @@ const parcelSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch parcels
+      // CREATE PARCEL
+      .addCase(createParcel.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        console.log('📝 Creating parcel...');
+      })
+      .addCase(createParcel.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = 'Parcel created successfully';
+        console.log('✅ Parcel created in Redux:', action.payload);
+        
+        // Ensure parcels is an array
+        if (!Array.isArray(state.parcels)) {
+          state.parcels = [];
+        }
+        
+        // Add new parcel to the beginning of the list
+        state.parcels.unshift(action.payload);
+        console.log('📦 Updated parcels list:', state.parcels);
+      })
+      .addCase(createParcel.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to create parcel';
+        console.error('❌ Parcel creation failed:', action.payload);
+      })
+
+      // FETCH PARCELS
       .addCase(fetchParcels.pending, (state) => {
         state.loading = true;
         state.error = null;
+        console.log('📡 Fetching parcels...');
       })
       .addCase(fetchParcels.fulfilled, (state, action) => {
         state.loading = false;
-        // Ensure we always set an array
-        state.parcels = Array.isArray(action.payload) ? action.payload : [];
+        state.error = null;
+        
+        // Ensure parcels is an array
+        if (!Array.isArray(state.parcels)) {
+          state.parcels = [];
+        }
+        
+        // Handle different response formats
+        const parcelsData = action.payload.parcels || action.payload || [];
+        state.parcels = parcelsData;
+        
         console.log('📦 Fetched parcels from API:', action.payload);
         console.log('📦 Current parcels in state:', state.parcels);
       })
       .addCase(fetchParcels.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
-      })
-      // Create parcel
-      .addCase(createParcel.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createParcel.fulfilled, (state, action) => {
-        state.loading = false;
-        // Ensure state.parcels is an array
-        if (!Array.isArray(state.parcels)) {
-          state.parcels = [];
-        }
-        // Add the new parcel to the existing array
-        state.parcels.unshift(action.payload); // Add to beginning of array
-        state.success = 'Parcel created successfully';
-        console.log('✅ Parcel added to Redux store:', action.payload);
-      })
-      .addCase(createParcel.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || 'Failed to fetch parcels';
+        console.error('❌ Failed to fetch parcels:', action.payload);
       })
       // Update parcel
       .addCase(updateParcel.pending, (state) => {

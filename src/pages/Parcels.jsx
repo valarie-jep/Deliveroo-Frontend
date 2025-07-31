@@ -109,30 +109,47 @@ const Parcels = () => {
   const [viewMode, setViewMode] = React.useState("grid");
 
   useEffect(() => {
-    // Don't re-fetch if we just created a parcel successfully
-    if (!parcelsState.success || parcelsState.success !== 'Parcel created successfully') {
-      dispatch(fetchParcels());
+    console.log('🔄 Parcels component mounted');
+    console.log('👤 Current user:', user);
+    console.log('📦 Current parcels state:', parcelsState);
+    
+    if (parcelsState.success) {
+      console.log('✅ Parcel creation was successful, not re-fetching');
+      return;
     }
+    
+    console.log('📡 Fetching parcels from API...');
+    dispatch(fetchParcels());
   }, [dispatch, parcelsState.success]);
+
+  // Log whenever parcels change
+  useEffect(() => {
+    console.log('📦 Parcels updated:', {
+      totalParcels: parcels?.length || 0,
+      parcels: parcels,
+      filteredCount: filteredList?.length || 0,
+      user: user
+    });
+  }, [parcels, filteredList, user]);
+
+  // Log filtered results
+  useEffect(() => {
+    console.log('🔍 Filtered parcels:', {
+      originalCount: parcels?.length || 0,
+      filteredCount: filteredList?.length || 0,
+      searchTerm: searchTerm,
+      statusFilter: statusFilter
+    });
+  }, [filteredList, searchTerm, statusFilter]);
 
   // Debug logging
   console.log('Parcels State:', parcelsState);
   console.log('User:', user);
   console.log('All Parcels:', parcels);
-  const filteredList = user
-  ? parcels.filter((parcel) => {
-      // Handle different possible user ID field names
-      const parcelUserId = parcel.user_id || parcel.userId || parcel.user?.id;
-      const currentUserId = user.id || user.user_id || user.userId;
-      
-      console.log('Parcel User ID:', parcelUserId, 'Current User ID:', currentUserId);
-      
-      return parcelUserId === currentUserId;
-    })
-  : [];
-
-  // Temporary fallback: if no parcels found for user, show all parcels
-  const displayList = filteredList.length === 0 && parcels.length > 0 ? parcels : filteredList;
+  
+  // Show all parcels for now (temporarily disable user filtering)
+  const filteredList = parcels;
+  const displayList = filteredList;
   
   console.log('Filtered Parcels:', filteredList);
   console.log('Display List:', displayList);
@@ -147,13 +164,22 @@ const Parcels = () => {
   // Filter by search term
   const searchFiltered = displayList.filter((parcel) => {
     const term = searchTerm.toLowerCase();
-    return (
+    const matches = (
       parcel.status?.toLowerCase().includes(term) ||
       parcel.sender_name?.toLowerCase().includes(term) ||
       parcel.recipient_name?.toLowerCase().includes(term) ||
       parcel.pickup_location_text?.toLowerCase().includes(term) ||
       parcel.destination_location_text?.toLowerCase().includes(term)
     );
+    
+    console.log(`🔍 Searching "${term}" in parcel ${parcel.id}:`, matches);
+    return matches;
+  });
+  
+  console.log('🔍 Search results:', {
+    searchTerm,
+    displayListLength: displayList.length,
+    searchFilteredLength: searchFiltered.length
   });
   
   // Sort based on selection
@@ -167,10 +193,28 @@ const Parcels = () => {
     }
     return 0;
   });
+  
+  console.log('📊 Final sorted list:', {
+    total: sortedList.length,
+    parcels: sortedList.map(p => ({ id: p.id, sender: p.sender_name, status: p.status }))
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      
+      {/* Debug Section - Remove this later */}
+      <div className="bg-yellow-100 p-4 mb-4">
+        <h3 className="font-bold">Debug Info:</h3>
+        <p>Total parcels from API: {parcels?.length || 0}</p>
+        <p>Filtered parcels: {filteredList?.length || 0}</p>
+        <p>Display list: {displayList?.length || 0}</p>
+        <p>Search filtered: {searchFiltered?.length || 0}</p>
+        <p>Final sorted: {sortedList?.length || 0}</p>
+        <p>Search term: "{searchTerm}"</p>
+        <p>Sort by: "{sortBy}"</p>
+      </div>
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-4 pt-8 max-w-6xl mx-auto gap-4">
   <h2 className="text-2xl font-bold text-orange-600">My Parcels</h2>
 

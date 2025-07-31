@@ -167,7 +167,9 @@ class TrackingService {
       this.errorCounts.set(parcelId, 0);
       
       if (onUpdate) {
-        onUpdate(data);
+        // Extract the live_tracking data or use the data directly
+        const trackingData = data.live_tracking || data;
+        onUpdate(trackingData);
       }
     } catch (error) {
       console.error('❌ Error fetching tracking data:', error);
@@ -250,7 +252,16 @@ class TrackingService {
 
         // Call update callback
         if (onUpdate) {
-          onUpdate(update);
+          // Ensure the update has the expected structure
+          const safeUpdate = {
+            status: update.status || 'pending',
+            current_location: update.current_location || 'Location not specified',
+            estimated_delivery: update.estimated_delivery || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+            last_updated: update.last_updated || new Date().toISOString(),
+            progress: update.progress || 0,
+            map_position: update.map_position || null
+          };
+          onUpdate(safeUpdate);
         }
 
         updateIndex++;
