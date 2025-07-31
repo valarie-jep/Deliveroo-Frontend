@@ -18,7 +18,17 @@ export const getParcels = createAsyncThunk(
       const res = await axios.get(`${BASE_URL}/parcels`, getAuthHeaders(thunkAPI));
       return res.data;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to load parcels';
+      console.error('Failed to fetch parcels:', error);
+      let message = 'Failed to load parcels';
+      
+      if (error?.message === 'Network Error') {
+        message = 'Network error: Unable to connect to server. Please check your internet connection.';
+      } else if (error?.response?.status === 0) {
+        message = 'CORS error: Server is not accessible. Please check if the backend is running.';
+      } else if (error?.response?.data?.message) {
+        message = error.response.data.message;
+      }
+      
       return thunkAPI.rejectWithValue(message);
     }
   }

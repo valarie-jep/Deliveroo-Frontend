@@ -19,14 +19,53 @@ export const validateEmail = (email) => {
 };
 
 export const getEmailErrorMessage = (error) => {
-  if (error.message?.includes('network')) {
-    return 'Network error. Please check your connection.';
+  console.log('Processing email error:', error);
+  
+  // Check for network errors
+  if (error.message?.includes('network') || error.message?.includes('fetch')) {
+    return 'Network error. Please check your connection and try again.';
   }
-  if (error.message?.includes('401')) {
+  
+  // Check for authentication errors
+  if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
     return 'Authentication failed. Please log in again.';
   }
-  if (error.message?.includes('500')) {
-    return 'Server error. Please try again later.';
+  
+  // Check for server errors
+  if (error.message?.includes('500') || error.message?.includes('Internal Server Error')) {
+    return 'Server error. The email service is temporarily unavailable.';
   }
-  return 'Email operation failed. Please try again.';
+  
+  // Check for service unavailable
+  if (error.message?.includes('503') || error.message?.includes('Service Unavailable')) {
+    return 'Email service is temporarily unavailable. Please try again later.';
+  }
+  
+  // Check for rate limiting
+  if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
+    return 'Too many email requests. Please wait a moment before trying again.';
+  }
+  
+  // Check for specific backend errors
+  if (error.message?.includes('Email service unavailable')) {
+    return 'Email service is not configured on the server. Please contact support.';
+  }
+  
+  // Check for API endpoint not found
+  if (error.message?.includes('404') || error.message?.includes('Not Found')) {
+    return 'Email service endpoint not found. The server may not support email functionality.';
+  }
+  
+  // Default error message
+  return 'Email operation failed. Please try again or contact support if the problem persists.';
+};
+
+export const getEmailDebugInfo = () => {
+  return {
+    emailEnabled: isEmailEnabled(),
+    apiUrl: process.env.REACT_APP_API_URL || 'Not set',
+    hasToken: !!localStorage.getItem('token'),
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString()
+  };
 }; 

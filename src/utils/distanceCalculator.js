@@ -18,7 +18,7 @@ export const calculateTravelTime = (distance, transportMode = 'road') => {
   
   switch (transportMode) {
     case 'road':
-      averageSpeed = 30; // km/h for city driving
+      averageSpeed = 25; // km/h for city driving (more realistic)
       break;
     case 'highway':
       averageSpeed = 60; // km/h for highway
@@ -29,8 +29,11 @@ export const calculateTravelTime = (distance, transportMode = 'road') => {
     case 'walk':
       averageSpeed = 5; // km/h for walking
       break;
+    case 'delivery':
+      averageSpeed = 20; // km/h for delivery vehicles
+      break;
     default:
-      averageSpeed = 30;
+      averageSpeed = 25;
   }
   
   const timeInHours = distance / averageSpeed;
@@ -41,6 +44,92 @@ export const calculateTravelTime = (distance, transportMode = 'road') => {
     minutes: Math.round(timeInMinutes % 60),
     totalMinutes: Math.round(timeInMinutes)
   };
+};
+
+// Calculate current position based on progress percentage
+export const calculateCurrentPosition = (pickup, destination, progressPercentage) => {
+  if (!pickup || !destination) return null;
+  
+  const progress = progressPercentage / 100;
+  
+  return {
+    lat: pickup.lat + (destination.lat - pickup.lat) * progress,
+    lng: pickup.lng + (destination.lng - pickup.lng) * progress
+  };
+};
+
+// Calculate progress percentage based on status
+export const calculateProgressPercentage = (status) => {
+  switch (status) {
+    case 'pending':
+      return 0;
+    case 'in_transit':
+      return 50;
+    case 'delivered':
+      return 100;
+    case 'cancelled':
+      return 0;
+    default:
+      return 25;
+  }
+};
+
+// Calculate remaining distance and time based on current progress
+export const calculateRemainingJourney = (parcel, progressPercentage) => {
+  const pickup = {
+    lat: parseFloat(parcel.pick_up_latitude),
+    lng: parseFloat(parcel.pick_up_longitude)
+  };
+  
+  const destination = {
+    lat: parseFloat(parcel.destination_latitude),
+    lng: parseFloat(parcel.destination_longitude)
+  };
+  
+  const totalDistance = calculateDistance(
+    pickup.lat, pickup.lng, 
+    destination.lat, destination.lng
+  );
+  
+  const totalTime = calculateTravelTime(totalDistance, 'delivery');
+  
+  const remainingDistance = totalDistance * (1 - progressPercentage / 100);
+  const remainingTime = {
+    hours: Math.floor(totalTime.hours * (1 - progressPercentage / 100)),
+    minutes: Math.round(totalTime.minutes * (1 - progressPercentage / 100)),
+    totalMinutes: Math.round(totalTime.totalMinutes * (1 - progressPercentage / 100))
+  };
+  
+  return {
+    totalDistance,
+    totalTime,
+    remainingDistance,
+    remainingTime,
+    progressPercentage,
+    pickup,
+    destination
+  };
+};
+
+// Calculate estimated arrival time
+export const calculateEstimatedArrival = (parcel) => {
+  if (!parcel || parcel.status === 'delivered') return null;
+  
+  const now = new Date();
+  const createdDate = new Date(parcel.created_at);
+  const timeDiff = now - createdDate;
+  const hoursElapsed = timeDiff / (1000 * 60 * 60);
+  
+  let estimatedHours = 48; // Default 48 hours
+  
+  if (parcel.status === 'in_transit') {
+    estimatedHours = 24; // 24 hours remaining when in transit
+  } else if (parcel.status === 'pending') {
+    estimatedHours = 48; // 48 hours total for pending
+  }
+  
+  const estimatedDate = new Date(now.getTime() + (estimatedHours * 60 * 60 * 1000));
+  return estimatedDate;
 };
 
 // Format distance for display
@@ -64,37 +153,77 @@ export const formatTime = (timeObj) => {
   }
 };
 
-// Calculate remaining distance and time based on current progress
-export const calculateRemainingJourney = (parcel, progressPercentage) => {
-  const pickup = {
-    lat: parseFloat(parcel.pick_up_latitude),
-    lng: parseFloat(parcel.pick_up_longitude)
-  };
+// Format time remaining for display
+export const formatTimeRemaining = (estimatedDate) => {
+  if (!estimatedDate) return 'Calculating...';
   
-  const destination = {
-    lat: parseFloat(parcel.destination_latitude),
-    lng: parseFloat(parcel.destination_longitude)
-  };
+  const now = new Date();
+  const timeDiff = estimatedDate - now;
   
-  const totalDistance = calculateDistance(
-    pickup.lat, pickup.lng, 
-    destination.lat, destination.lng
+  if (timeDiff <= 0) return 'Overdue';
+  
+  const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+  const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? 's' : ''}`;
+  } else if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else {
+    return `${minutes}m`;
+  }
+};
+
+// Generate route path with intermediate points
+export const generateRoutePath = (pickup, destination, steps = 20) => {
+  if (!pickup || !destination) return [];
+  
+  const points = [];
+  
+  for (let i = 0; i <= steps; i++) {
+    const progress = i / steps;
+    const lat = pickup.lat + (destination.lat - pickup.lat) * progress;
+    const lng = pickup.lng + (destination.lng - pickup.lng) * progress;
+    points.push({ lat, lng });
+  }
+  
+  return points;
+};
+
+// Calculate bearing between two points
+export const calculateBearing = (lat1, lon1, lat2, lon2) => {
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const lat1Rad = lat1 * Math.PI / 180;
+  const lat2Rad = lat2 * Math.PI / 180;
+  
+  const y = Math.sin(dLon) * Math.cos(lat2Rad);
+  const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - 
+            Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+  
+  const bearing = Math.atan2(y, x) * 180 / Math.PI;
+  return (bearing + 360) % 360;
+};
+
+// Calculate midpoint between two coordinates
+export const calculateMidpoint = (lat1, lon1, lat2, lon2) => {
+  const lat1Rad = lat1 * Math.PI / 180;
+  const lon1Rad = lon1 * Math.PI / 180;
+  const lat2Rad = lat2 * Math.PI / 180;
+  const lon2Rad = lon2 * Math.PI / 180;
+  
+  const Bx = Math.cos(lat2Rad) * Math.cos(lon2Rad - lon1Rad);
+  const By = Math.cos(lat2Rad) * Math.sin(lon2Rad - lon1Rad);
+  
+  const midLat = Math.atan2(
+    Math.sin(lat1Rad) + Math.sin(lat2Rad),
+    Math.sqrt((Math.cos(lat1Rad) + Bx) * (Math.cos(lat1Rad) + Bx) + By * By)
   );
   
-  const totalTime = calculateTravelTime(totalDistance);
-  
-  const remainingDistance = totalDistance * (1 - progressPercentage / 100);
-  const remainingTime = {
-    hours: Math.floor(totalTime.hours * (1 - progressPercentage / 100)),
-    minutes: Math.round(totalTime.minutes * (1 - progressPercentage / 100)),
-    totalMinutes: Math.round(totalTime.totalMinutes * (1 - progressPercentage / 100))
-  };
+  const midLon = lon1Rad + Math.atan2(By, Math.cos(lat1Rad) + Bx);
   
   return {
-    totalDistance,
-    totalTime,
-    remainingDistance,
-    remainingTime,
-    progressPercentage
+    lat: midLat * 180 / Math.PI,
+    lng: midLon * 180 / Math.PI
   };
 }; 

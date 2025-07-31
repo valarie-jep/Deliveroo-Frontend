@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { LoadScript } from "@react-google-maps/api";
@@ -7,6 +7,7 @@ import RealTimeTracking from "../components/RealTimeTracking";
 import RouteProgress from "../components/RouteProgress";
 import JourneyMetrics from "../components/JourneyMetrics";
 import TrackingMap from "../components/TrackingMap";
+import { calculateMidpoint, calculateCurrentPosition } from "../utils/distanceCalculator";
 
 const GOOGLE_MAPS_LIBRARIES = ["places"];
 
@@ -26,6 +27,8 @@ const TrackingPage = () => {
   const [error, setError] = useState(null);
   const [mapError, setMapError] = useState(null);
   const [showTracking, setShowTracking] = useState(false);
+  const [mapCenter, setMapCenter] = useState(center);
+  const [mapZoom, setMapZoom] = useState(10);
   const navigate = useNavigate();
   const location = useLocation();
   const parcels = useSelector((state) => state.parcels.list);
@@ -43,6 +46,7 @@ const TrackingPage = () => {
         setParcel(foundParcel);
         setError(null);
         setShowTracking(true);
+        updateMapView(foundParcel);
       } else {
         setError("Parcel not found");
         setParcel(null);
@@ -50,6 +54,61 @@ const TrackingPage = () => {
       }
     }
   }, [location.state, parcels]);
+
+  const getPickupCoordinates = useCallback((parcel) => {
+    if (!parcel || !parcel.pick_up_latitude || !parcel.pick_up_longitude) {
+      return null;
+    }
+    return { 
+      lat: parseFloat(parcel.pick_up_latitude), 
+      lng: parseFloat(parcel.pick_up_longitude) 
+    };
+  }, []);
+
+  const getDestinationCoordinates = useCallback((parcel) => {
+    if (!parcel || !parcel.destination_latitude || !parcel.destination_longitude) {
+      return null;
+    }
+    return { 
+      lat: parseFloat(parcel.destination_latitude), 
+      lng: parseFloat(parcel.destination_longitude) 
+    };
+  }, []);
+
+  const updateMapView = useCallback((parcel) => {
+    const pickup = getPickupCoordinates(parcel);
+    const destination = getDestinationCoordinates(parcel);
+    
+    if (pickup && destination) {
+      // Calculate midpoint for better centering
+      const midpoint = calculateMidpoint(
+        pickup.lat, pickup.lng,
+        destination.lat, destination.lng
+      );
+      setMapCenter(midpoint);
+      
+      // Calculate distance to determine appropriate zoom level
+      const distance = Math.sqrt(
+        Math.pow(destination.lat - pickup.lat, 2) + 
+        Math.pow(destination.lng - pickup.lng, 2)
+      );
+      
+      // Adjust zoom based on distance
+      if (distance > 0.1) {
+        setMapZoom(8); // Zoom out for longer distances
+      } else if (distance > 0.01) {
+        setMapZoom(10); // Medium zoom
+      } else {
+        setMapZoom(12); // Zoom in for short distances
+      }
+    } else if (pickup) {
+      setMapCenter(pickup);
+      setMapZoom(12);
+    } else if (destination) {
+      setMapCenter(destination);
+      setMapZoom(12);
+    }
+  }, [getPickupCoordinates, getDestinationCoordinates]);
 
   const handleTrack = (e) => {
     e.preventDefault();
@@ -72,74 +131,8 @@ const TrackingPage = () => {
     }
     setParcel(foundParcel);
     setShowTracking(true);
+    updateMapView(foundParcel);
   };
-
-  const getPickupCoordinates = (parcel) => {
-    if (!parcel || !parcel.pick_up_latitude || !parcel.pick_up_longitude) {
-      return null;
-    }
-    return { 
-      lat: parseFloat(parcel.pick_up_latitude), 
-      lng: parseFloat(parcel.pick_up_longitude) 
-    };
-  };
-
-  const getDestinationCoordinates = (parcel) => {
-    if (!parcel || !parcel.destination_latitude || !parcel.destination_longitude) {
-      return null;
-    }
-    return { 
-      lat: parseFloat(parcel.destination_latitude), 
-      lng: parseFloat(parcel.destination_longitude) 
-    };
-  };
-
-  const getCurrentPosition = (parcel) => {
-    const pickup = getPickupCoordinates(parcel);
-    const destination = getDestinationCoordinates(parcel);
-    
-    if (!pickup || !destination) {
-      return pickup || destination || center;
-    }
-
-    const status = parcel.status;
-    let progress = 0;
-
-    switch (status) {
-      case 'pending':
-        progress = 0;
-        break;
-      case 'in_transit':
-        progress = 0.5;
-        break;
-      case 'delivered':
-        progress = 1;
-        break;
-      default:
-        progress = 0.25;
-    }
-
-    return {
-      lat: pickup.lat + (destination.lat - pickup.lat) * progress,
-      lng: pickup.lng + (destination.lng - pickup.lng) * progress
-    };
-  };
-
-  const getMapCenter = (parcel) => {
-    const pickup = getPickupCoordinates(parcel);
-    const destination = getDestinationCoordinates(parcel);
-    
-    if (pickup && destination) {
-      return {
-        lat: (pickup.lat + destination.lat) / 2,
-        lng: (pickup.lng + destination.lng) / 2
-      };
-    }
-    
-    return pickup || destination || center;
-  };
-
-
 
   const handleMapLoad = () => {
     console.log("Map loaded successfully");
@@ -154,6 +147,12 @@ const TrackingPage = () => {
   const handleScriptLoadError = (error) => {
     console.error("LoadScript error:", error);
     setMapError("Failed to load Google Maps. Please check your API key configuration.");
+  };
+
+  const handleRefreshTracking = () => {
+    if (parcel) {
+      updateMapView(parcel);
+    }
   };
 
   return (
@@ -189,17 +188,40 @@ const TrackingPage = () => {
         {showTracking && parcel && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Tracking Information */}
-            <div>
+            <div className="space-y-4">
               <JourneyMetrics parcel={parcel} />
               <RouteProgress parcel={parcel} />
               <RealTimeTracking parcelId={parcel.id} />
+              
+              {/* Refresh Button */}
+              <div className="bg-white rounded-lg shadow-sm border p-4">
+                <button
+                  onClick={handleRefreshTracking}
+                  className="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
+                >
+                  🔄 Refresh Tracking
+                </button>
+              </div>
             </div>
 
             {/* Map */}
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">
-                Location Map
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Location Map
+                </h3>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-500">
+                    Zoom: {mapZoom}
+                  </span>
+                  <button
+                    onClick={handleRefreshTracking}
+                    className="text-xs text-blue-500 hover:text-blue-700"
+                  >
+                    Reset View
+                  </button>
+                </div>
+              </div>
               
               <div className="border rounded-lg overflow-hidden">
                 {!hasValidApiKey ? (
@@ -223,8 +245,8 @@ const TrackingPage = () => {
                     <TrackingMap
                       parcel={parcel}
                       containerStyle={containerStyle}
-                      center={getMapCenter(parcel)}
-                      zoom={10}
+                      center={mapCenter}
+                      zoom={mapZoom}
                       onLoad={handleMapLoad}
                       onError={handleMapError}
                     />
@@ -235,6 +257,29 @@ const TrackingPage = () => {
                     <p className="text-red-600 text-sm">{mapError}</p>
                   </div>
                 )}
+              </div>
+              
+              {/* Map Legend */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Map Legend</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600">Pickup Location</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="text-gray-600">Destination</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span className="text-gray-600">Current Position</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-1 bg-orange-500 rounded-full"></div>
+                    <span className="text-gray-600">Route Path</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

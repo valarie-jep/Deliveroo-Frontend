@@ -11,10 +11,44 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
   const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [trackingHistory, setTrackingHistory] = useState([]);
+  const [estimatedArrival, setEstimatedArrival] = useState(null);
   
   const parcel = useSelector((state) => 
     state.parcels.list.find(p => String(p.id) === String(parcelId))
   );
+
+  const calculateEstimatedArrival = useCallback((parcel) => {
+    if (!parcel || parcel.status === 'delivered') return null;
+    
+    const now = new Date();
+    const createdDate = new Date(parcel.created_at);
+    const timeDiff = now - createdDate;
+    const hoursElapsed = timeDiff / (1000 * 60 * 60);
+    
+    let estimatedHours = 48; // Default 48 hours
+    
+    if (parcel.status === 'in_transit') {
+      estimatedHours = 24; // 24 hours remaining when in transit
+    } else if (parcel.status === 'pending') {
+      estimatedHours = 48; // 48 hours total for pending
+    }
+    
+    const estimatedDate = new Date(now.getTime() + (estimatedHours * 60 * 60 * 1000));
+    return estimatedDate;
+  }, []);
+
+  const addTrackingEvent = useCallback((status, message) => {
+    const event = {
+      id: Date.now(),
+      timestamp: new Date(),
+      status,
+      message,
+      type: 'status_update'
+    };
+    
+    setTrackingHistory(prev => [event, ...prev.slice(0, 9)]); // Keep last 10 events
+  }, []);
 
   const fetchParcelData = useCallback(async () => {
     if (!parcelId) return;
@@ -30,19 +64,29 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
       
       if (updatedParcel && updatedParcel.status) {
         const currentStatus = updatedParcel.status;
-        toast.info(`Parcel ${parcelId} status: ${currentStatus.replace('_', ' ').toUpperCase()}`, {
+        const statusMessage = currentStatus.replace('_', ' ').toUpperCase();
+        
+        // Add tracking event
+        addTrackingEvent(currentStatus, `Parcel status updated to ${statusMessage}`);
+        
+        // Show toast notification
+        toast.info(`Parcel ${parcelId} status: ${statusMessage}`, {
           position: "top-right",
           autoClose: 3000,
         });
+        
+        // Update estimated arrival
+        setEstimatedArrival(calculateEstimatedArrival(updatedParcel));
       }
     } catch (error) {
       console.error('Failed to refresh parcel data:', error);
       setError('Failed to refresh parcel data');
+      addTrackingEvent('error', 'Failed to refresh tracking data');
     } finally {
       setIsTracking(false);
       setLoading(false);
     }
-  }, [dispatch, parcelId]);
+  }, [dispatch, parcelId, addTrackingEvent, calculateEstimatedArrival]);
 
   useEffect(() => {
     fetchParcelData();
@@ -58,8 +102,35 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, fetchParcelData]);
 
+  useEffect(() => {
+    if (parcel) {
+      setEstimatedArrival(calculateEstimatedArrival(parcel));
+    }
+  }, [parcel, calculateEstimatedArrival]);
+
   const handleManualRefresh = () => {
     fetchParcelData();
+  };
+
+  const formatTimeRemaining = (estimatedDate) => {
+    if (!estimatedDate) return 'Calculating...';
+    
+    const now = new Date();
+    const timeDiff = estimatedDate - now;
+    
+    if (timeDiff <= 0) return 'Overdue';
+    
+    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days} day${days > 1 ? 's' : ''}`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
   };
 
   if (loading && !parcel) {
@@ -161,32 +232,77 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
         </div>
       </div>
 
+      {/* Estimated Arrival */}
+      {estimatedArrival && parcel.status !== 'delivered' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-blue-800">
+                Estimated Arrival
+              </span>
+            </div>
+            <span className="text-sm font-bold text-blue-900">
+              {formatTimeRemaining(estimatedArrival)}
+            </span>
+          </div>
+          <p className="text-xs text-blue-600 mt-1">
+            Expected by {estimatedArrival.toLocaleDateString()} at {estimatedArrival.toLocaleTimeString()}
+          </p>
+        </div>
+      )}
+
       {/* Tracking Status */}
       <TrackingStatus parcel={parcel} />
 
       {/* Real-time Updates */}
       {parcel.status === 'in_transit' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-blue-800">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-green-800">
               Real-time Updates Active
             </span>
           </div>
-          <p className="text-xs text-blue-600 mt-1">
+          <p className="text-xs text-green-600 mt-1">
             Your parcel is in transit. We'll notify you of any status changes.
           </p>
         </div>
       )}
 
-      {/* Estimated Delivery */}
-      {parcel.status === 'in_transit' && (
+      {/* Tracking History */}
+      {trackingHistory.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-4">
+          <h4 className="text-sm font-medium text-gray-900 mb-3">Recent Updates</h4>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {trackingHistory.map((event) => (
+              <div key={event.id} className="flex items-center space-x-2 text-xs">
+                <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                <span className="text-gray-500">
+                  {event.timestamp.toLocaleTimeString()}
+                </span>
+                <span className="text-gray-700">{event.message}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Delivery Confirmation */}
+      {parcel.status === 'delivered' && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-green-800 mb-2">
-            Estimated Delivery
-          </h4>
-          <p className="text-sm text-green-700">
-            Your parcel is expected to arrive within 24-48 hours
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-sm font-medium text-green-800">
+              Successfully Delivered!
+            </span>
+          </div>
+          <p className="text-xs text-green-600 mt-1">
+            Your parcel has been delivered to the destination.
           </p>
         </div>
       )}

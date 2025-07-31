@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import emailService from '../services/emailService';
+import { getEmailErrorMessage } from '../utils/emailErrorHandler';
 
 const EmailPreferences = () => {
   const user = useSelector((state) => state.auth.user);
@@ -41,7 +42,8 @@ const EmailPreferences = () => {
       }
     } catch (error) {
       console.error('Failed to load email preferences:', error);
-      setMessage('Email preferences service is currently unavailable. Using default settings.');
+      const errorMessage = getEmailErrorMessage(error);
+      setMessage(`Email preferences service is currently unavailable: ${errorMessage}`);
       // Keep default preferences on error
     } finally {
       setLoading(false);
@@ -69,7 +71,8 @@ const EmailPreferences = () => {
       setMessage('Email preferences updated successfully!');
     } catch (error) {
       console.error('Failed to update email preferences:', error);
-      setMessage('Email preferences service is currently unavailable. Your changes will be saved locally.');
+      const errorMessage = getEmailErrorMessage(error);
+      setMessage(`Email preferences service is currently unavailable: ${errorMessage}`);
       // Store preferences locally as fallback
       localStorage.setItem('emailPreferences', JSON.stringify(preferences));
     } finally {
@@ -81,11 +84,13 @@ const EmailPreferences = () => {
     try {
       setLoading(true);
       setMessage('');
+      console.log('Sending test email from EmailPreferences component...');
       await emailService.sendTestEmail(user.email);
-      setMessage('Test email sent successfully!');
+      setMessage('Test email sent successfully! Check your inbox (and spam folder).');
     } catch (error) {
       console.error('Failed to send test email:', error);
-      setMessage('Failed to send test email');
+      const errorMessage = getEmailErrorMessage(error);
+      setMessage(`Failed to send test email: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
