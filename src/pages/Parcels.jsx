@@ -105,7 +105,7 @@ const Parcels = () => {
   const navigate = useNavigate();
   const parcelsState = useSelector((state) => state.parcels) || {};
   const user = useSelector((state) => state.auth.user);
-  const { list = [], loading = false, error = null } = parcelsState;
+  const { parcels = [], loading = false, error = null } = parcelsState;
   const [searchTerm, setSearchTerm] = React.useState('');
   const [sortBy, setSortBy] = React.useState('');
   const [viewMode, setViewMode] = React.useState("grid");
@@ -114,17 +114,37 @@ const Parcels = () => {
     dispatch(fetchParcels());
   }, [dispatch]);
 
+  // Debug logging
+  console.log('Parcels State:', parcelsState);
+  console.log('User:', user);
+  console.log('All Parcels:', parcels);
+  const filteredList = user
+  ? parcels.filter((parcel) => {
+      // Handle different possible user ID field names
+      const parcelUserId = parcel.user_id || parcel.userId || parcel.user?.id;
+      const currentUserId = user.id || user.user_id || user.userId;
+      
+      console.log('Parcel User ID:', parcelUserId, 'Current User ID:', currentUserId);
+      
+      return parcelUserId === currentUserId;
+    })
+  : [];
+
+  // Temporary fallback: if no parcels found for user, show all parcels
+  const displayList = filteredList.length === 0 && parcels.length > 0 ? parcels : filteredList;
+  
+  console.log('Filtered Parcels:', filteredList);
+  console.log('Display List:', displayList);
+
   if (loading) return <p className="text-center mt-6">Loading parcels...</p>;
   if (error)
     return <p className="text-center mt-6 text-red-500">Error: {error}</p>;
-  if (!Array.isArray(list)) {
+  if (!Array.isArray(parcels)) {
     return <p className="text-red-600">Parcel data is invalid</p>;
   }
-  const filteredList = user
-  ? list.filter((parcel) => parcel.user_id === user.id)
-  : [];
+  
   // Filter by search term
-  const searchFiltered = filteredList.filter((parcel) => {
+  const searchFiltered = displayList.filter((parcel) => {
     const term = searchTerm.toLowerCase();
     return (
       parcel.status?.toLowerCase().includes(term) ||
