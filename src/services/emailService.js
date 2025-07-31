@@ -174,12 +174,16 @@ class EmailService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAuthToken()}`
-        }
+          'Authorization': `Bearer ${this.getAuthToken()}`,
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'include'
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.warn(`Email preferences API returned status: ${response.status}`);
+        return null;
       }
       
       const data = await response.json();
@@ -198,13 +202,22 @@ class EmailService {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAuthToken()}`
+          'Authorization': `Bearer ${this.getAuthToken()}`,
+          'Accept': 'application/json'
         },
+        mode: 'cors',
+        credentials: 'include',
         body: JSON.stringify(preferences)
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to update email preferences:', error);
+      throw error;
     }
   }
 }

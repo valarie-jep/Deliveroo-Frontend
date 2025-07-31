@@ -19,6 +19,8 @@ const EmailPreferences = () => {
   const loadEmailPreferences = useCallback(async () => {
     try {
       setLoading(true);
+      setMessage(''); // Clear any previous messages
+      
       const userPreferences = await emailService.getEmailPreferences(user.id);
       
       // Ensure we have all required properties with default values
@@ -34,11 +36,12 @@ const EmailPreferences = () => {
         });
       } else {
         // If API returns null/undefined, keep default preferences
-        console.warn('No email preferences returned from API, using defaults');
+        console.warn('Email preferences API not available, using default preferences');
+        setMessage('Email preferences API not available. Using default settings.');
       }
     } catch (error) {
       console.error('Failed to load email preferences:', error);
-      setMessage('Failed to load email preferences');
+      setMessage('Email preferences service is currently unavailable. Using default settings.');
       // Keep default preferences on error
     } finally {
       setLoading(false);
@@ -66,7 +69,9 @@ const EmailPreferences = () => {
       setMessage('Email preferences updated successfully!');
     } catch (error) {
       console.error('Failed to update email preferences:', error);
-      setMessage('Failed to update email preferences');
+      setMessage('Email preferences service is currently unavailable. Your changes will be saved locally.');
+      // Store preferences locally as fallback
+      localStorage.setItem('emailPreferences', JSON.stringify(preferences));
     } finally {
       setLoading(false);
     }
