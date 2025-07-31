@@ -125,6 +125,12 @@ const parcelSlice = createSlice({
     // New action to update parcel status (for demo mode)
     updateParcelStatus: (state, action) => {
       const { parcelId, status, current_location, estimated_delivery, last_updated, progress, map_position } = action.payload;
+      
+      // Ensure state.parcels is an array
+      if (!Array.isArray(state.parcels)) {
+        state.parcels = [];
+      }
+      
       const parcelIndex = state.parcels.findIndex(p => p.id === parcelId);
       
       if (parcelIndex !== -1) {
@@ -152,7 +158,8 @@ const parcelSlice = createSlice({
       })
       .addCase(fetchParcels.fulfilled, (state, action) => {
         state.loading = false;
-        state.parcels = action.payload;
+        // Ensure we always set an array
+        state.parcels = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchParcels.rejected, (state, action) => {
         state.loading = false;
@@ -165,6 +172,10 @@ const parcelSlice = createSlice({
       })
       .addCase(createParcel.fulfilled, (state, action) => {
         state.loading = false;
+        // Ensure state.parcels is an array
+        if (!Array.isArray(state.parcels)) {
+          state.parcels = [];
+        }
         state.parcels.push(action.payload);
         state.success = 'Parcel created successfully';
       })
@@ -179,6 +190,10 @@ const parcelSlice = createSlice({
       })
       .addCase(updateParcel.fulfilled, (state, action) => {
         state.loading = false;
+        // Ensure state.parcels is an array
+        if (!Array.isArray(state.parcels)) {
+          state.parcels = [];
+        }
         const index = state.parcels.findIndex(p => p.id === action.payload.id);
         if (index !== -1) {
           state.parcels[index] = action.payload;
@@ -196,6 +211,10 @@ const parcelSlice = createSlice({
       })
       .addCase(deleteParcel.fulfilled, (state, action) => {
         state.loading = false;
+        // Ensure state.parcels is an array
+        if (!Array.isArray(state.parcels)) {
+          state.parcels = [];
+        }
         state.parcels = state.parcels.filter(p => p.id !== action.payload);
         state.success = 'Parcel deleted successfully';
       })
