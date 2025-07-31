@@ -1,71 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { getEmailDebugInfo } from '../utils/emailErrorHandler';
+import { BASE_URL } from '../config/api';
 
 const EmailStatusChecker = () => {
-  const [status, setStatus] = useState({
-    environment: 'checking',
-    api: 'checking',
-    auth: 'checking',
-    email: 'checking'
-  });
+  const [status, setStatus] = useState('checking');
   const [details, setDetails] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkEmailStatus();
+    checkEmailSystem();
   }, []);
 
-  const checkEmailStatus = async () => {
-    setLoading(true);
-    const debugInfo = getEmailDebugInfo();
-    setDetails(debugInfo);
-
-    // Check environment variables
-    const envStatus = {
-      apiUrl: !!process.env.REACT_APP_API_URL,
-      emailEnabled: process.env.REACT_APP_EMAIL_ENABLED !== 'false'
-    };
-
-    // Check API connectivity
-    let apiStatus = 'error';
+  const checkEmailSystem = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/health`, {
+      setStatus('checking');
+      
+      // Check environment configuration
+      const envCheck = {
+        apiUrl: !!BASE_URL,
+        emailEnabled: process.env.REACT_APP_EMAIL_ENABLED !== 'false'
+      };
+
+      // Check backend health
+      const healthResponse = await fetch(`${BASE_URL}/health`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      apiStatus = response.ok ? 'success' : 'error';
-    } catch (error) {
-      apiStatus = 'error';
-    }
-
-    // Check authentication
-    const token = localStorage.getItem('token');
-    const authStatus = token ? 'success' : 'error';
-
-    // Check email endpoint
-    let emailStatus = 'error';
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/email/test`, {
-        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token || ''}`
-        },
-        body: JSON.stringify({ user_email: 'test@example.com' })
+          'Content-Type': 'application/json'
+        }
       });
-      emailStatus = response.status === 404 ? 'not_implemented' : 
-                   response.ok ? 'success' : 'error';
-    } catch (error) {
-      emailStatus = 'error';
-    }
 
-    setStatus({
-      environment: envStatus.apiUrl && envStatus.emailEnabled ? 'success' : 'error',
-      api: apiStatus,
-      auth: authStatus,
-      email: emailStatus
-    });
-    setLoading(false);
+      const healthData = await healthResponse.json();
+
+      // Check email endpoint
+      const emailResponse = await fetch(`${BASE_URL}/email/test`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const emailData = await emailResponse.json();
+
+      setDetails({
+        environment: envCheck,
+        backend: {
+          status: healthResponse.status,
+          data: healthData
+        },
+        email: {
+          status: emailResponse.status,
+          data: emailData
+        }
+      });
+
+      if (healthResponse.ok && emailResponse.ok) {
+        setStatus('healthy');
+      } else {
+        setStatus('error');
+      }
+    } catch (error) {
+      setStatus('error');
+      setDetails({ error: error.message });
+    }
   };
 
   const getStatusIcon = (status) => {
@@ -194,7 +189,7 @@ const EmailStatusChecker = () => {
       </div>
 
       <button
-        onClick={checkEmailStatus}
+        onClick={checkEmailSystem}
         className="mt-4 w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
       >
         Refresh Status

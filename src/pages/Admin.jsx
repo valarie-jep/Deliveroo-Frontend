@@ -5,8 +5,7 @@ import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/authSlice';
 import axios from 'axios';
-
-const API_BASE = process.env.REACT_APP_API_URL || '';
+import { BASE_URL } from '../config/api';
 
 // SVG Icons
 const ParcelIcon = () => (
@@ -41,7 +40,7 @@ const AdminDashboardHome = () => {
         setLoading(true);
         setError(null);
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE}/admin/parcels`, {
+        const res = await axios.get(`${BASE_URL}/admin/parcels`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const allParcels = res.data.parcels || res.data || [];
@@ -143,7 +142,7 @@ const AdminParcels = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_BASE}/admin/parcels`, {
+      const res = await axios.get(`${BASE_URL}/admin/parcels`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setParcels(res.data.parcels || res.data || []);
@@ -163,7 +162,7 @@ const AdminParcels = () => {
     if (!newStatus) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${API_BASE}/admin/parcels/${id}/status`, { status: newStatus }, {
+      await axios.patch(`${BASE_URL}/admin/parcels/${id}/status`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStatusUpdate((prev) => ({ ...prev, [id]: '' }));
@@ -178,7 +177,7 @@ const AdminParcels = () => {
     if (!newLocation) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${API_BASE}/admin/parcels/${id}/location`, { current_location: newLocation }, {
+      await axios.patch(`${BASE_URL}/admin/parcels/${id}/location`, { current_location: newLocation }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLocationUpdate((prev) => ({ ...prev, [id]: '' }));
@@ -321,7 +320,7 @@ const AdminHistories = () => {
         setLoading(true);
         setError(null);
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE}/admin/histories`, {
+        const res = await axios.get(`${BASE_URL}/admin/histories`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setHistories(res.data.histories || res.data || []);

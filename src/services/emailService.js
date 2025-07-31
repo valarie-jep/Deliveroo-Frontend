@@ -1,6 +1,8 @@
+import { BASE_URL } from '../config/api';
+
 class EmailService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || '';
+    this.baseURL = BASE_URL;
   }
 
   // Get JWT token from localStorage or Redux store

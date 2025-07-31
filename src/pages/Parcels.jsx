@@ -66,9 +66,7 @@ const ParcelCard = ({ parcel }) => {
           View Details
         </button>
         {parcel.status !== "cancelled" && parcel.status !== "delivered" &&(<button
-          onClick={() =>
-            navigate("/tracking", { state: { trackingId: parcel.id } })
-          }
+                            onClick={() => navigate(`/tracking/${parcel.id}`, { state: { trackingId: parcel.id } })}
           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md transition"
         >
           Track
@@ -277,9 +275,7 @@ const Parcels = () => {
                   View
                 </button>
                 <button
-                  onClick={() =>
-                    navigate("/tracking", { state: { trackingId: parcel.id } })
-                  }
+                  onClick={() => navigate(`/tracking/${parcel.id}`, { state: { trackingId: parcel.id } })}
                   className="bg-orange-500 text-white px-3 py-1 rounded-md text-xs hover:bg-orange-600 transition"
                 >
                   Track

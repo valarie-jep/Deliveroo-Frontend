@@ -1,69 +1,49 @@
-export const handleEmailError = (error, action) => {
+import { BASE_URL } from '../config/api';
+
+export const logEmailError = (action, error) => {
   console.error(`Email ${action} failed:`, error);
-  
-  // Don't break the main functionality if email fails
-  // Just log the error and continue
-  return {
-    success: false,
-    error: `Email ${action} failed, but operation completed`
-  };
-};
-
-export const isEmailEnabled = () => {
-  return process.env.REACT_APP_EMAIL_ENABLED !== 'false';
-};
-
-export const validateEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
 };
 
 export const getEmailErrorMessage = (error) => {
-  console.log('Processing email error:', error);
+  if (!error) return 'An unknown error occurred';
   
-  // Check for network errors
-  if (error.message?.includes('network') || error.message?.includes('fetch')) {
+  // Handle different error types
+  if (error.response) {
+    const { status, data } = error.response;
+    
+    switch (status) {
+      case 400:
+        return data?.message || 'Invalid request. Please check your input.';
+      case 401:
+        return 'Authentication required. Please log in again.';
+      case 403:
+        return 'You are not authorized to perform this action.';
+      case 404:
+        return 'Email service not found. Please contact support.';
+      case 429:
+        return 'Too many requests. Please try again later.';
+      case 500:
+        return 'Server error. Please try again later.';
+      default:
+        return data?.message || `Server error (${status}). Please try again.`;
+    }
+  }
+  
+  if (error.request) {
     return 'Network error. Please check your connection and try again.';
   }
   
-  // Check for authentication errors
-  if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-    return 'Authentication failed. Please log in again.';
-  }
-  
-  // Check for server errors
-  if (error.message?.includes('500') || error.message?.includes('Internal Server Error')) {
-    return 'Server error. The email service is temporarily unavailable.';
-  }
-  
-  // Check for service unavailable
-  if (error.message?.includes('503') || error.message?.includes('Service Unavailable')) {
-    return 'Email service is temporarily unavailable. Please try again later.';
-  }
-  
-  // Check for rate limiting
-  if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
-    return 'Too many email requests. Please wait a moment before trying again.';
-  }
-  
-  // Check for specific backend errors
-  if (error.message?.includes('Email service unavailable')) {
-    return 'Email service is not configured on the server. Please contact support.';
-  }
-  
-  // Check for API endpoint not found
-  if (error.message?.includes('404') || error.message?.includes('Not Found')) {
-    return 'Email service endpoint not found. The server may not support email functionality.';
-  }
-  
-  // Default error message
-  return 'Email operation failed. Please try again or contact support if the problem persists.';
+  return error.message || 'An unexpected error occurred';
 };
 
 export const getEmailDebugInfo = () => {
+  const isEmailEnabled = () => {
+    return process.env.REACT_APP_EMAIL_ENABLED !== 'false';
+  };
+
   return {
     emailEnabled: isEmailEnabled(),
-    apiUrl: process.env.REACT_APP_API_URL || 'Not set',
+    apiUrl: BASE_URL || 'Not set',
     hasToken: !!localStorage.getItem('token'),
     userAgent: navigator.userAgent,
     timestamp: new Date().toISOString()

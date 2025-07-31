@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar";
+import { BASE_URL } from "../config/api";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -12,7 +13,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL || ''}/profile`, {
+        const res = await axios.get(`${BASE_URL}/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

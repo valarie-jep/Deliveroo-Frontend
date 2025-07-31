@@ -115,12 +115,16 @@ const App = () => {
             }
           />
           <Route
-            path="/tracking"
+            path="/tracking/:parcelId"
             element={
               <AuthWrapper>
                 <TrackingPage />
               </AuthWrapper>
             }
+          />
+          <Route
+            path="/tracking"
+            element={<Navigate to="/parcels" replace />}
           />
           <Route
             path="/profile"

@@ -1,5 +1,6 @@
 import { store } from '../redux/store';
 import { updateParcelStatus } from '../redux/parcelSlice';
+import { BASE_URL } from '../config/api';
 
 class TrackingService {
   constructor() {
@@ -9,6 +10,7 @@ class TrackingService {
     this.isDemoActive = new Map(); // Track if demo is active
     this.errorCounts = new Map(); // Track error counts for backoff
     this.presentationMode = false; // Flag for presentation mode
+    this.cleanupCallbacks = new Map(); // Track cleanup callbacks
   }
 
   // Enable presentation mode (bypasses some rate limiting)
@@ -25,7 +27,7 @@ class TrackingService {
 
   // Start real-time tracking
   startTracking(parcelId, onUpdate, onError) {
-    console.log('🚀 Starting real-time tracking for parcel', parcelId);
+    console.log(`🚀 Starting live tracking for parcel: ${parcelId}`);
     
     // Don't start if demo is active
     if (this.isDemoActive.get(parcelId)) {
@@ -51,37 +53,75 @@ class TrackingService {
     }, 30000); // Poll every 30 seconds for faster real-time updates
 
     this.trackingIntervals.set(parcelId, interval);
+    
+    // Store cleanup callback
+    this.cleanupCallbacks.set(parcelId, () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    });
   }
 
   // Stop real-time tracking
   stopTracking(parcelId) {
-    console.log('🛑 Stopping tracking for parcel', parcelId);
+    console.log(`🛑 Stopping tracking for parcel ${parcelId}`);
     
     this.isTracking.set(parcelId, false);
-    
+    this.isDemoActive.set(parcelId, false);
+
+    // Clear tracking interval
     const interval = this.trackingIntervals.get(parcelId);
     if (interval) {
       clearInterval(interval);
       this.trackingIntervals.delete(parcelId);
     }
+
+    // Clear demo interval
+    const demoInterval = this.demoIntervals.get(parcelId);
+    if (demoInterval) {
+      clearInterval(demoInterval);
+      this.demoIntervals.delete(parcelId);
+    }
+
+    // Execute cleanup callback
+    const cleanup = this.cleanupCallbacks.get(parcelId);
+    if (cleanup) {
+      cleanup();
+      this.cleanupCallbacks.delete(parcelId);
+    }
+
+    // Reset error count
+    this.errorCounts.delete(parcelId);
   }
 
   // Stop demo mode
   stopDemo(parcelId) {
-    console.log('🛑 Stopping demo for parcel', parcelId);
+    console.log(`🛑 Stopping demo for parcel ${parcelId}`);
     
     this.isDemoActive.set(parcelId, false);
-    
-    const interval = this.demoIntervals.get(parcelId);
-    if (interval) {
-      clearInterval(interval);
+
+    // Clear demo interval
+    const demoInterval = this.demoIntervals.get(parcelId);
+    if (demoInterval) {
+      clearInterval(demoInterval);
       this.demoIntervals.delete(parcelId);
+    }
+
+    // Restart real tracking if it was active before demo
+    if (this.isTracking.get(parcelId)) {
+      console.log(`🔄 Restarting real tracking for parcel ${parcelId}`);
+      // Small delay to ensure clean state transition
+      setTimeout(() => {
+        if (this.isTracking.get(parcelId)) {
+          this.fetchTrackingData(parcelId);
+        }
+      }, 1000);
     }
   }
 
   // Fetch tracking data from API with rate limiting
   async fetchTrackingData(parcelId, onUpdate, onError) {
-    console.log('📡 Fetching tracking data for parcel', parcelId);
+    console.log(`📡 Fetching tracking data for parcel ${parcelId}`);
     
     try {
       const token = localStorage.getItem('token');
@@ -89,7 +129,7 @@ class TrackingService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/tracking/${parcelId}/live`, {
+      const response = await fetch(`${BASE_URL}/tracking/${parcelId}/live`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -225,7 +265,7 @@ class TrackingService {
     this.demoIntervals.set(parcelId, demoInterval);
   }
 
-  // Stop all tracking for a parcel
+  // Stop all tracking for a parcel (both real and demo)
   stopAllTracking(parcelId) {
     this.stopTracking(parcelId);
     this.stopDemo(parcelId);
@@ -233,14 +273,60 @@ class TrackingService {
 
   // Check if tracking is active
   isTrackingActive(parcelId) {
-    return this.isTracking.get(parcelId) || this.isDemoActive.get(parcelId);
+    return this.isTracking.get(parcelId) || false;
   }
 
   // Check if demo is active
   isDemoActive(parcelId) {
-    return this.isDemoActive.get(parcelId);
+    return this.isDemoActive.get(parcelId) || false;
+  }
+
+  // Comprehensive cleanup for component unmount
+  cleanup(parcelId) {
+    console.log(`🧹 Cleaning up tracking for parcel ${parcelId}`);
+    
+    // Stop all tracking
+    this.stopAllTracking(parcelId);
+    
+    // Clear all stored data
+    this.isTracking.delete(parcelId);
+    this.isDemoActive.delete(parcelId);
+    this.errorCounts.delete(parcelId);
+    this.cleanupCallbacks.delete(parcelId);
+  }
+
+  // Cleanup all tracking (for app shutdown)
+  cleanupAll() {
+    console.log('🧹 Cleaning up all tracking services');
+    
+    // Stop all intervals
+    for (const [parcelId, interval] of this.trackingIntervals) {
+      clearInterval(interval);
+    }
+    
+    for (const [parcelId, interval] of this.demoIntervals) {
+      clearInterval(interval);
+    }
+    
+    // Clear all maps
+    this.trackingIntervals.clear();
+    this.demoIntervals.clear();
+    this.isTracking.clear();
+    this.isDemoActive.clear();
+    this.errorCounts.clear();
+    this.cleanupCallbacks.clear();
+    
+    // Reset presentation mode
+    this.presentationMode = false;
   }
 }
 
+// Create singleton instance
 const trackingService = new TrackingService();
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  trackingService.cleanupAll();
+});
+
 export default trackingService; 

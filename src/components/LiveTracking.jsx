@@ -117,17 +117,19 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
 
   // Initialize tracking on mount
   useEffect(() => {
-    if (parcelId && autoRefresh && !isDemoMode) {
-      startTracking();
+    if (parcelId && !isDemoMode) {
+      console.log(`🚀 Starting live tracking for parcel: ${parcelId}`);
+      trackingService.startTracking(parcelId, handleTrackingUpdate, handleTrackingError);
     }
 
-    // Cleanup on unmount
+    // Cleanup function to stop tracking when component unmounts
     return () => {
       if (parcelId) {
-        trackingService.stopAllTracking(parcelId);
+        console.log(`🧹 Cleaning up tracking for parcel: ${parcelId}`);
+        trackingService.cleanup(parcelId);
       }
     };
-  }, [parcelId, autoRefresh, startTracking, isDemoMode]);
+  }, [parcelId, isDemoMode]);
 
   // Update tracking data when parcel changes
   useEffect(() => {

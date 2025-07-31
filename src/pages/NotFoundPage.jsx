@@ -27,7 +27,7 @@ function NotFoundPage() {
             Go to Homepage
           </button>
           <button
-            onClick={() => navigate('/tracking')}
+            onClick={() => navigate('/parcels')}
             className="border border-orange-500 text-orange-500 hover:bg-orange-100 font-medium px-6 py-3 rounded-md transition"
           >
             Track a Parcel
