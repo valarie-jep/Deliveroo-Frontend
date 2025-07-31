@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
+import { LoadScript } from "@react-google-maps/api";
 import Navbar from "../components/Navbar";
 import RealTimeTracking from "../components/RealTimeTracking";
 import RouteProgress from "../components/RouteProgress";
 import JourneyMetrics from "../components/JourneyMetrics";
+import TrackingMap from "../components/TrackingMap";
 
 const GOOGLE_MAPS_LIBRARIES = ["places"];
 
@@ -219,69 +220,14 @@ const TrackingPage = () => {
                     libraries={GOOGLE_MAPS_LIBRARIES}
                     onError={handleScriptLoadError}
                   >
-                    <GoogleMap
-                      mapContainerStyle={containerStyle}
+                    <TrackingMap
+                      parcel={parcel}
+                      containerStyle={containerStyle}
                       center={getMapCenter(parcel)}
                       zoom={10}
                       onLoad={handleMapLoad}
                       onError={handleMapError}
-                    >
-                      {/* Pickup Marker */}
-                      {getPickupCoordinates(parcel) && (
-                        <Marker 
-                          position={getPickupCoordinates(parcel)}
-                          icon={{
-                            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-                            scaledSize: new window.google.maps.Size(32, 32)
-                          }}
-                          label={{
-                            text: 'Pickup',
-                            className: 'marker-label'
-                          }}
-                        />
-                      )}
-
-                      {/* Destination Marker */}
-                      {getDestinationCoordinates(parcel) && (
-                        <Marker 
-                          position={getDestinationCoordinates(parcel)}
-                          icon={{
-                            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                            scaledSize: new window.google.maps.Size(32, 32)
-                          }}
-                          label={{
-                            text: 'Destination',
-                            className: 'marker-label'
-                          }}
-                        />
-                      )}
-
-                      {/* Current Position Marker */}
-                      <Marker 
-                        position={getCurrentPosition(parcel)}
-                        icon={{
-                          url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-                          scaledSize: new window.google.maps.Size(40, 40)
-                        }}
-                        label={{
-                          text: 'Parcel',
-                          className: 'marker-label'
-                        }}
-                      />
-
-                      {/* Route Line */}
-                      {getPickupCoordinates(parcel) && getDestinationCoordinates(parcel) && (
-                        <Polyline
-                          path={[getPickupCoordinates(parcel), getDestinationCoordinates(parcel)]}
-                          options={{
-                            strokeColor: '#FF6B35',
-                            strokeOpacity: 0.8,
-                            strokeWeight: 4,
-                            geodesic: true
-                          }}
-                        />
-                      )}
-                    </GoogleMap>
+                    />
                   </LoadScript>
                 )}
                 {mapError && (
