@@ -1,40 +1,18 @@
 import React from 'react';
-import { calculateProgressPercentage, formatTimeRemaining, calculateEstimatedArrival } from '../utils/distanceCalculator';
+import { calculateProgressPercentage, calculateEstimatedArrival, formatTimeRemaining } from '../utils/distanceCalculator';
 
-const RouteProgress = ({ parcel }) => {
-  const getProgressPercentage = (status) => {
-    return calculateProgressPercentage(status);
-  };
+const RouteProgress = ({ parcel, isDemoMode = false }) => {
+  if (!parcel) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border p-4">
+        <p className="text-gray-500 text-center">No parcel data available</p>
+      </div>
+    );
+  }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-500';
-      case 'in_transit':
-        return 'bg-blue-500';
-      case 'delivered':
-        return 'bg-green-500';
-      case 'cancelled':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'Order Placed';
-      case 'in_transit':
-        return 'In Transit';
-      case 'delivered':
-        return 'Delivered';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return 'Processing';
-    }
-  };
+  const progress = calculateProgressPercentage(parcel);
+  const estimatedArrival = calculateEstimatedArrival(parcel);
+  const timeRemaining = formatTimeRemaining(estimatedArrival);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -54,148 +32,220 @@ const RouteProgress = ({ parcel }) => {
   const getStatusDescription = (status) => {
     switch (status) {
       case 'pending':
-        return 'Your parcel is ready for pickup';
+        return 'Parcel is being prepared for pickup';
       case 'in_transit':
-        return 'Your parcel is on its way to destination';
+        return 'Parcel is on its way to destination';
       case 'delivered':
-        return 'Your parcel has been successfully delivered';
+        return 'Parcel has been successfully delivered';
       case 'cancelled':
-        return 'Your parcel delivery has been cancelled';
+        return 'Parcel delivery has been cancelled';
       default:
-        return 'Processing your parcel';
+        return 'Status unknown';
     }
   };
 
-  const progress = getProgressPercentage(parcel.status);
-  const statusColor = getStatusColor(parcel.status);
-  const statusText = getStatusText(parcel.status);
-  const statusIcon = getStatusIcon(parcel.status);
-  const statusDescription = getStatusDescription(parcel.status);
-  const estimatedArrival = calculateEstimatedArrival(parcel);
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'yellow';
+      case 'in_transit':
+        return 'blue';
+      case 'delivered':
+        return 'green';
+      case 'cancelled':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
+
+  const steps = [
+    { id: 'pending', label: 'Pending', icon: '📦', description: 'Parcel prepared' },
+    { id: 'in_transit', label: 'In Transit', icon: '🚚', description: 'On the way' },
+    { id: 'delivered', label: 'Delivered', icon: '✅', description: 'Completed' }
+  ];
+
+  const getCurrentStepIndex = () => {
+    switch (parcel.status) {
+      case 'pending':
+        return 0;
+      case 'in_transit':
+        return 1;
+      case 'delivered':
+        return 2;
+      default:
+        return 0;
+    }
+  };
+
+  const currentStepIndex = getCurrentStepIndex();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="text-2xl">{statusIcon}</div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{statusText}</h3>
-            <p className="text-sm text-gray-600">{statusDescription}</p>
-          </div>
-        </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${statusColor}`}>
-          {progress}% Complete
-        </span>
+    <div className="bg-white rounded-lg shadow-sm border">
+      <div className="p-4 border-b bg-gray-50">
+        <h3 className="text-lg font-medium text-gray-900">Journey Progress</h3>
+        <p className="text-sm text-gray-600 mt-1">
+          Track your parcel's journey from pickup to delivery
+        </p>
       </div>
       
-      <div className="space-y-4">
-        {/* Pickup Location */}
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-4 flex-1">
-            <p className="text-sm font-medium text-gray-900">Pickup Location</p>
-            <p className="text-xs text-gray-500">{parcel.pickup_location_text || 'Location not specified'}</p>
-            {parcel.created_at && (
-              <p className="text-xs text-gray-400 mt-1">
-                Ordered: {new Date(parcel.created_at).toLocaleDateString()}
+      <div className="p-4">
+        {/* Current Status */}
+        <div className="mb-6">
+          <div className="flex items-center space-x-3 mb-2">
+            <span className="text-2xl">{getStatusIcon(parcel.status)}</span>
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900">
+                {parcel.status.replace('_', ' ').toUpperCase()}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {getStatusDescription(parcel.status)}
               </p>
-            )}
+            </div>
           </div>
-        </div>
-
-        {/* Progress Line */}
-        <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
           
-          {/* In Transit Step */}
+          {/* Progress Bar */}
           <div className="relative">
-            <div className="flex items-center">
-              <div className={`w-8 h-8 rounded-full ${progress >= 50 ? 'bg-blue-500' : 'bg-gray-300'} flex items-center justify-center`}>
-                {progress >= 50 && (
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                )}
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className={`h-3 rounded-full transition-all duration-1000 ease-out ${
+                  isDemoMode ? 'animate-pulse-slow' : ''
+                }`}
+                style={{
+                  width: `${progress}%`,
+                  background: `linear-gradient(90deg, #${getStatusColor(parcel.status)}-500, #${getStatusColor(parcel.status)}-400)`
+                }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0%</span>
+              <span>{Math.round(progress)}%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Estimated Arrival */}
+        {parcel.status !== 'delivered' && estimatedArrival && (
+          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-blue-800">
+                  Estimated Arrival
+                </span>
               </div>
-              <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-900">In Transit</p>
-                <p className="text-xs text-gray-500">
-                  {progress >= 50 ? 'Parcel is on its way' : 'Waiting for pickup'}
-                </p>
-                {parcel.status === 'in_transit' && estimatedArrival && (
-                  <p className="text-xs text-blue-600 mt-1">
-                    Est. arrival: {formatTimeRemaining(estimatedArrival)}
+              <span className="text-sm font-bold text-blue-900">
+                {timeRemaining}
+              </span>
+            </div>
+            <p className="text-xs text-blue-600 mt-1">
+              Expected by {new Date(estimatedArrival).toLocaleDateString()} at {new Date(estimatedArrival).toLocaleTimeString()}
+            </p>
+          </div>
+        )}
+
+        {/* Progress Steps */}
+        <div className="space-y-4">
+          {steps.map((step, index) => {
+            const isCompleted = index < currentStepIndex;
+            const isCurrent = index === currentStepIndex;
+            const isPending = index > currentStepIndex;
+            
+            return (
+              <div 
+                key={step.id}
+                className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-300 ${
+                  isCompleted 
+                    ? 'bg-green-50 border border-green-200' 
+                    : isCurrent 
+                      ? 'bg-blue-50 border border-blue-200' 
+                      : 'bg-gray-50 border border-gray-200'
+                }`}
+              >
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  isCompleted 
+                    ? 'bg-green-500 text-white' 
+                    : isCurrent 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {isCompleted ? '✓' : index + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{step.icon}</span>
+                    <h4 className={`text-sm font-medium ${
+                      isCompleted 
+                        ? 'text-green-800' 
+                        : isCurrent 
+                          ? 'text-blue-800' 
+                          : 'text-gray-600'
+                    }`}>
+                      {step.label}
+                    </h4>
+                  </div>
+                  <p className={`text-xs ${
+                    isCompleted 
+                      ? 'text-green-600' 
+                      : isCurrent 
+                        ? 'text-blue-600' 
+                        : 'text-gray-500'
+                  }`}>
+                    {step.description}
                   </p>
+                </div>
+                {isCurrent && (
+                  <div className="flex-shrink-0">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  </div>
                 )}
               </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Destination */}
-        <div className="flex items-center">
-          <div className={`w-8 h-8 rounded-full ${progress >= 100 ? 'bg-green-500' : 'bg-gray-300'} flex items-center justify-center`}>
-            {progress >= 100 && (
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
+        {/* Additional Information */}
+        <div className="mt-6 p-3 bg-gray-50 rounded-lg">
+          <h5 className="text-sm font-medium text-gray-900 mb-2">Additional Information</h5>
+          <div className="space-y-1 text-xs text-gray-600">
+            <div className="flex justify-between">
+              <span>Parcel ID:</span>
+              <span className="font-medium">#{parcel.id}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Weight:</span>
+              <span className="font-medium">{parcel.weight || 'N/A'} kg</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Created:</span>
+              <span className="font-medium">
+                {parcel.created_at ? new Date(parcel.created_at).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            {parcel.last_updated && (
+              <div className="flex justify-between">
+                <span>Last Updated:</span>
+                <span className="font-medium">
+                  {new Date(parcel.last_updated).toLocaleString()}
+                </span>
+              </div>
             )}
           </div>
-          <div className="ml-4 flex-1">
-            <p className="text-sm font-medium text-gray-900">Destination</p>
-            <p className="text-xs text-gray-500">{parcel.destination_location_text || 'Location not specified'}</p>
-            {parcel.status === 'delivered' && (
-              <p className="text-xs text-green-600 mt-1">
-                Delivered successfully
-              </p>
-            )}
-          </div>
         </div>
-      </div>
 
-      {/* Progress Bar */}
-      <div className="mt-6">
-        <div className="flex justify-between text-xs text-gray-500 mb-2">
-          <span>Journey Progress</span>
-          <span>{progress}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
-          <div 
-            className={`h-3 rounded-full transition-all duration-1000 ease-out ${statusColor}`}
-            style={{ width: `${progress}%` }}
-          ></div>
-          {/* Progress animation for in-transit parcels */}
-          {parcel.status === 'in_transit' && progress > 0 && (
-            <div className="absolute top-0 left-0 h-3 w-3 bg-white rounded-full animate-pulse opacity-75"
-                 style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}></div>
-          )}
-        </div>
-      </div>
-
-      {/* Additional Information */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="font-medium text-gray-900">Parcel ID</p>
-            <p className="text-gray-600">{parcel.id}</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-900">Weight</p>
-            <p className="text-gray-600">{parcel.weight || 'N/A'} kg</p>
-          </div>
-          {parcel.status === 'in_transit' && estimatedArrival && (
-            <div className="col-span-2">
-              <p className="font-medium text-gray-900">Estimated Delivery</p>
-              <p className="text-blue-600">
-                {estimatedArrival.toLocaleDateString()} at {estimatedArrival.toLocaleTimeString()}
-              </p>
+        {/* Demo Mode Notice */}
+        {isDemoMode && (
+          <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+              <span className="text-xs font-medium text-purple-800">Demo Mode Active</span>
             </div>
-          )}
-        </div>
+            <p className="text-xs text-purple-600 mt-1">
+              Watch the progress bar and status indicators update in real-time!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

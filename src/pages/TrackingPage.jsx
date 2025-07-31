@@ -1,369 +1,226 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";
-import { LoadScript } from "@react-google-maps/api";
-import Navbar from "../components/Navbar";
-import RealTimeTracking from "../components/RealTimeTracking";
-import LiveTracking from "../components/LiveTracking";
-import RouteProgress from "../components/RouteProgress";
-import JourneyMetrics from "../components/JourneyMetrics";
-import TrackingMap from "../components/TrackingMap";
-import { calculateMidpoint, calculateCurrentPosition } from "../utils/distanceCalculator";
-
-const GOOGLE_MAPS_LIBRARIES = ["places"];
-
-const containerStyle = {
-  width: "100%",
-  height: "500px",
-};
-
-const center = {
-  lat: -1.286389,
-  lng: 36.817223,
-};
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
+import TrackingMap from '../components/TrackingMap';
+import RealTimeTracking from '../components/RealTimeTracking';
+import RouteProgress from '../components/RouteProgress';
+import JourneyMetrics from '../components/JourneyMetrics';
+import LiveTracking from '../components/LiveTracking';
+import { calculateMidpoint, calculateProgressPercentage, calculateEstimatedArrival } from '../utils/distanceCalculator';
 
 const TrackingPage = () => {
-  const [trackingId, setTrackingId] = useState("");
-  const [parcel, setParcel] = useState(null);
-  const [error, setError] = useState(null);
-  const [mapError, setMapError] = useState(null);
-  const [showTracking, setShowTracking] = useState(false);
-  const [mapCenter, setMapCenter] = useState(center);
-  const [mapZoom, setMapZoom] = useState(10);
-  const [activeTab, setActiveTab] = useState('live');
-  const navigate = useNavigate();
-  const location = useLocation();
-  const parcels = useSelector((state) => state.parcels.list);
+  const { parcelId } = useParams();
+  const parcel = useSelector(state => 
+    state.parcels.parcels.find(p => p.id === parseInt(parcelId))
+  );
 
-  const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-  const hasValidApiKey = googleMapsApiKey && googleMapsApiKey !== 'your_google_maps_api_key_here';
+  const [mapCenter, setMapCenter] = useState(null);
+  const [mapZoom, setMapZoom] = useState(12);
+  const [currentParcel, setCurrentParcel] = useState(parcel);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
-  useEffect(() => {
-    if (location.state?.trackingId) {
-      setTrackingId(location.state.trackingId);
-      const foundParcel = parcels.find(
-        (p) => String(p.id) === String(location.state.trackingId)
-      );
-      if (foundParcel) {
-        setParcel(foundParcel);
-        setError(null);
-        setShowTracking(true);
-        updateMapView(foundParcel);
-      } else {
-        setError("Parcel not found");
-        setParcel(null);
-        setShowTracking(false);
+  // Update map view based on parcel coordinates
+  const updateMapView = useCallback((parcelData) => {
+    if (!parcelData) return;
+
+    const pickupCoords = parcelData.pickup_location_coordinates;
+    const destinationCoords = parcelData.destination_location_coordinates;
+
+    if (pickupCoords && destinationCoords) {
+      try {
+        const pickup = JSON.parse(pickupCoords);
+        const destination = JSON.parse(destinationCoords);
+        
+        // Calculate midpoint for map center
+        const midpoint = calculateMidpoint(pickup, destination);
+        setMapCenter(midpoint);
+        
+        // Calculate dynamic zoom based on distance
+        const distance = Math.sqrt(
+          Math.pow(pickup.lat - destination.lat, 2) + 
+          Math.pow(pickup.lng - destination.lng, 2)
+        );
+        
+        // Adjust zoom based on distance
+        if (distance > 0.1) {
+          setMapZoom(10); // Far distance
+        } else if (distance > 0.05) {
+          setMapZoom(12); // Medium distance
+        } else {
+          setMapZoom(14); // Close distance
+        }
+      } catch (error) {
+        console.error('Error parsing coordinates:', error);
+        // Fallback to default coordinates
+        setMapCenter({ lat: -1.286389, lng: 36.817223 });
+        setMapZoom(12);
       }
+    } else {
+      // Fallback to default coordinates
+      setMapCenter({ lat: -1.286389, lng: 36.817223 });
+      setMapZoom(12);
     }
-  }, [location.state, parcels]);
-
-  const getPickupCoordinates = useCallback((parcel) => {
-    if (!parcel || !parcel.pick_up_latitude || !parcel.pick_up_longitude) {
-      return null;
-    }
-    return { 
-      lat: parseFloat(parcel.pick_up_latitude), 
-      lng: parseFloat(parcel.pick_up_longitude) 
-    };
   }, []);
 
-  const getDestinationCoordinates = useCallback((parcel) => {
-    if (!parcel || !parcel.destination_latitude || !parcel.destination_longitude) {
-      return null;
-    }
-    return { 
-      lat: parseFloat(parcel.destination_latitude), 
-      lng: parseFloat(parcel.destination_longitude) 
-    };
-  }, []);
-
-  const updateMapView = useCallback((parcel) => {
-    const pickup = getPickupCoordinates(parcel);
-    const destination = getDestinationCoordinates(parcel);
+  // Handle tracking updates from LiveTracking component
+  const handleTrackingUpdate = useCallback((trackingData) => {
+    console.log('🔄 Tracking update received:', trackingData);
     
-    if (pickup && destination) {
-      // Calculate midpoint for better centering
-      const midpoint = calculateMidpoint(
-        pickup.lat, pickup.lng,
-        destination.lat, destination.lng
-      );
-      setMapCenter(midpoint);
-      
-      // Calculate distance to determine appropriate zoom level
-      const distance = Math.sqrt(
-        Math.pow(destination.lat - pickup.lat, 2) + 
-        Math.pow(destination.lng - pickup.lng, 2)
-      );
-      
-      // Adjust zoom based on distance
-      if (distance > 0.1) {
-        setMapZoom(8); // Zoom out for longer distances
-      } else if (distance > 0.01) {
-        setMapZoom(10); // Medium zoom
-      } else {
-        setMapZoom(12); // Zoom in for short distances
-      }
-    } else if (pickup) {
-      setMapCenter(pickup);
-      setMapZoom(12);
-    } else if (destination) {
-      setMapCenter(destination);
-      setMapZoom(12);
-    }
-  }, [getPickupCoordinates, getDestinationCoordinates]);
+    // Update current parcel with new tracking data
+    const updatedParcel = {
+      ...currentParcel,
+      status: trackingData.status,
+      current_location: trackingData.current_location,
+      estimated_delivery: trackingData.estimated_delivery,
+      last_updated: trackingData.last_updated,
+      progress: trackingData.progress
+    };
+    
+    setCurrentParcel(updatedParcel);
+    setIsDemoMode(trackingData.isDemoMode || false);
 
-  const handleTrack = (e) => {
-    e.preventDefault();
-    setError(null);
-    setParcel(null);
-    setMapError(null);
-    setShowTracking(false);
-
-    if (!trackingId.trim()) {
-      setError("Please enter a tracking ID");
-      return;
+    // Update map view if we have new coordinates
+    if (trackingData.map_position) {
+      console.log('🗺️ Updating map position:', trackingData.map_position);
+      setMapCenter(trackingData.map_position);
+      setMapZoom(14); // Zoom in for current position
     }
 
-    const foundParcel = parcels.find(
-      (p) => String(p.id) === String(trackingId)
-    );
-    if (!foundParcel) {
-      setError("Parcel not found");
-      return;
+    // Show demo mode notification
+    if (trackingData.isDemoMode) {
+      console.log('🎬 Demo mode active - updating all components');
     }
-    setParcel(foundParcel);
-    setShowTracking(true);
-    updateMapView(foundParcel);
-  };
+  }, [currentParcel]);
 
-  const handleMapLoad = () => {
-    console.log("Map loaded successfully");
-    setMapError(null);
-  };
-
-  const handleMapError = (error) => {
-    console.error("Map error:", error);
-    setMapError("Failed to load map. Please check your internet connection.");
-  };
-
-  const handleScriptLoadError = (error) => {
-    console.error("LoadScript error:", error);
-    setMapError("Failed to load Google Maps. Please check your API key configuration.");
-  };
-
-  const handleRefreshTracking = () => {
+  // Initialize map view on mount
+  useEffect(() => {
     if (parcel) {
+      setCurrentParcel(parcel);
       updateMapView(parcel);
     }
-  };
+  }, [parcel, updateMapView]);
 
-  const handleTrackingUpdate = useCallback((trackingData) => {
-    console.log('📡 Tracking update received:', trackingData);
-    
-    // Update parcel with new tracking data
-    if (parcel && trackingData) {
-      const updatedParcel = {
-        ...parcel,
-        status: trackingData.status,
-        current_location: trackingData.current_location
-      };
-      setParcel(updatedParcel);
-    }
-  }, [parcel]);
-
-  const tabs = [
-    { id: 'live', label: 'Live Tracking', icon: '🚚' },
-    { id: 'details', label: 'Journey Details', icon: '📊' },
-    { id: 'map', label: 'Location Map', icon: '🗺️' }
-  ];
+  if (!parcel) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">📦</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Parcel Not Found</h2>
+          <p className="text-gray-600">The parcel you're looking for doesn't exist.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="max-w-6xl mx-auto mt-8 p-6">
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-6 text-orange-600">
-            Track Your Parcel
-          </h2>
-          <form
-            onSubmit={handleTrack}
-            className="mb-6 flex flex-col sm:flex-row gap-4"
-          >
-            <input
-              type="text"
-              value={trackingId}
-              onChange={(e) => setTrackingId(e.target.value)}
-              placeholder="Enter Parcel ID"
-              className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              required
-            />
-            <button
-              type="submit"
-              className="bg-orange-500 text-white font-semibold py-2 px-6 rounded hover:bg-orange-600 transition"
-            >
-              Track Parcel
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <div className="text-2xl">📦</div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Parcel #{parcel.id} Tracking
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {parcel.pickup_location_text} → {parcel.destination_location_text}
+                </p>
+              </div>
+            </div>
+            
+            {/* Demo Mode Indicator */}
+            {isDemoMode && (
+              <div className="flex items-center space-x-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
+                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">Demo Mode</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <nav className="flex space-x-8">
+            <button className="text-blue-600 border-b-2 border-blue-600 py-2 px-1 text-sm font-medium">
+              Live Tracking
             </button>
-          </form>
-          {error && <div className="text-red-600 mb-4 text-center">{error}</div>}
+            <button className="text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+              Journey Details
+            </button>
+            <button className="text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+              Location Map
+            </button>
+          </nav>
         </div>
 
-        {showTracking && parcel && (
-          <>
-            {/* Tab Navigation */}
-            <div className="bg-white rounded-lg shadow-lg mb-6">
-              <div className="border-b border-gray-200">
-                <nav className="flex space-x-8 px-6">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === tab.id
-                          ? 'border-orange-500 text-orange-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <span className="mr-2">{tab.icon}</span>
-                      {tab.label}
-                    </button>
-                  ))}
-                </nav>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Live Tracking */}
+          <div className="lg:col-span-1 space-y-6">
+            <LiveTracking 
+              parcelId={parcelId} 
+              parcel={currentParcel}
+              onTrackingUpdate={handleTrackingUpdate}
+            />
+          </div>
+
+          {/* Right Column - Map and Metrics */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Map */}
+            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div className="p-4 border-b bg-gray-50">
+                <h3 className="text-lg font-medium text-gray-900">Location Map</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Real-time location tracking and route visualization
+                </p>
               </div>
-
-              <div className="p-6">
-                {activeTab === 'live' && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Live Tracking */}
-                    <div>
-                      <LiveTracking 
-                        parcelId={parcel.id} 
-                        parcel={parcel}
-                        onTrackingUpdate={handleTrackingUpdate}
-                      />
-                    </div>
-
-                    {/* Journey Metrics */}
-                    <div>
-                      <JourneyMetrics parcel={parcel} />
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'details' && (
-                  <div className="space-y-4">
-                    <JourneyMetrics parcel={parcel} />
-                    <RouteProgress parcel={parcel} />
-                    <RealTimeTracking parcelId={parcel.id} />
-                  </div>
-                )}
-
-                {activeTab === 'map' && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Map */}
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Location Map
-                        </h3>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500">
-                            Zoom: {mapZoom}
-                          </span>
-                          <button
-                            onClick={handleRefreshTracking}
-                            className="text-xs text-blue-500 hover:text-blue-700"
-                          >
-                            Reset View
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="border rounded-lg overflow-hidden">
-                        {!hasValidApiKey ? (
-                          <div className="h-96 flex items-center justify-center bg-gray-100">
-                            <div className="text-center">
-                              <p className="text-gray-600 mb-2">Google Maps API key not configured</p>
-                              <p className="text-sm text-gray-500">
-                                Please add your Google Maps API key to the .env file
-                              </p>
-                              <p className="text-xs text-gray-400 mt-2">
-                                Location: {parcel.pickup_location_text || "Not available"}
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <LoadScript
-                            googleMapsApiKey={googleMapsApiKey}
-                            libraries={GOOGLE_MAPS_LIBRARIES}
-                            onError={handleScriptLoadError}
-                          >
-                            <TrackingMap
-                              parcel={parcel}
-                              containerStyle={containerStyle}
-                              center={mapCenter}
-                              zoom={mapZoom}
-                              onLoad={handleMapLoad}
-                              onError={handleMapError}
-                            />
-                          </LoadScript>
-                        )}
-                        {mapError && (
-                          <div className="p-4 bg-red-50 border-t border-red-200">
-                            <p className="text-red-600 text-sm">{mapError}</p>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Map Legend */}
-                      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Map Legend</h4>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span className="text-gray-600">Pickup Location</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <span className="text-gray-600">Destination</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                            <span className="text-gray-600">Current Position</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-3 h-1 bg-orange-500 rounded-full"></div>
-                            <span className="text-gray-600">Route Path</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Journey Details */}
-                    <div className="space-y-4">
-                      <JourneyMetrics parcel={parcel} />
-                      <RouteProgress parcel={parcel} />
-                    </div>
-                  </div>
-                )}
+              <div className="h-96">
+                <TrackingMap 
+                  parcel={currentParcel}
+                  center={mapCenter}
+                  zoom={mapZoom}
+                  isDemoMode={isDemoMode}
+                />
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-6 flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => navigate(`/parcels/${parcel.id}`)}
-                className="flex-1 bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
-              >
-                View Full Details
-              </button>
-              <button
-                onClick={() => navigate(`/parcels`)}
-                className="flex-1 bg-gray-500 text-white font-semibold py-2 px-4 rounded hover:bg-gray-600 transition"
-              >
-                Back to Parcels
-              </button>
+            {/* Progress and Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <RouteProgress parcel={currentParcel} isDemoMode={isDemoMode} />
+              <JourneyMetrics parcel={currentParcel} isDemoMode={isDemoMode} />
             </div>
-          </>
+
+            {/* Real-time Updates */}
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-4 border-b bg-gray-50">
+                <h3 className="text-lg font-medium text-gray-900">Real-time Updates</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Latest tracking information and status updates
+                </p>
+              </div>
+              <div className="p-4">
+                <RealTimeTracking parcel={currentParcel} isDemoMode={isDemoMode} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Demo Mode Instructions */}
+        {isDemoMode && (
+          <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-purple-800">Demo Mode Active</span>
+            </div>
+            <p className="text-sm text-purple-700">
+              <strong>Real data is being updated!</strong> The parcel status is being modified in the database and will persist everywhere - 
+              tracking page, parcels list, admin panel, etc. This simulates a complete delivery journey.
+            </p>
+          </div>
         )}
       </div>
     </div>

@@ -9,6 +9,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Handle tracking updates
   const handleTrackingUpdate = useCallback((data) => {
@@ -24,7 +25,8 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
       timestamp: new Date(),
       status: data.status,
       location: data.current_location,
-      message: `Status updated to ${data.status.replace('_', ' ').toUpperCase()}`
+      message: `Status updated to ${data.status.replace('_', ' ').toUpperCase()}`,
+      progress: data.progress || 0
     };
 
     setRecentUpdates(prev => [update, ...prev.slice(0, 9)]); // Keep last 10 updates
@@ -37,11 +39,15 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
       });
     }
 
-    // Call parent callback
+    // Call parent callback with enhanced data
     if (onTrackingUpdate) {
-      onTrackingUpdate(data);
+      onTrackingUpdate({
+        ...data,
+        parcelId,
+        isDemoMode
+      });
     }
-  }, [parcelId, parcel?.status, onTrackingUpdate]);
+  }, [parcelId, parcel?.status, onTrackingUpdate, isDemoMode]);
 
   // Handle tracking errors
   const handleTrackingError = useCallback((error) => {
@@ -60,6 +66,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     console.log('🚀 Starting live tracking for parcel:', parcelId);
     setIsTracking(true);
     setError(null);
+    setIsDemoMode(false);
 
     trackingService.startTracking(parcelId, handleTrackingUpdate, handleTrackingError);
   }, [parcelId, handleTrackingUpdate, handleTrackingError]);
@@ -70,7 +77,9 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
 
     console.log('🛑 Stopping live tracking for parcel:', parcelId);
     setIsTracking(false);
+    setIsDemoMode(false);
     trackingService.stopTracking(parcelId);
+    trackingService.stopDemo(parcelId);
   }, [parcelId]);
 
   // Manual refresh
@@ -103,12 +112,33 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
 
   // Start demo mode
   const startDemo = useCallback(() => {
-    console.log('🎬 Starting demo mode');
+    console.log('🎬 Starting enhanced demo mode');
     setIsTracking(true);
+    setIsDemoMode(true);
     setError(null);
     
+    // Stop any existing tracking
+    trackingService.stopTracking(parcelId);
+    
     trackingService.startDemo(parcelId, handleTrackingUpdate);
+    
+    toast.info('�� Demo mode started! Real parcel data is being updated throughout the system.', {
+      position: "top-right",
+      autoClose: 4000,
+    });
   }, [parcelId, handleTrackingUpdate]);
+
+  // Stop demo mode
+  const stopDemo = useCallback(() => {
+    console.log('🛑 Stopping demo mode');
+    setIsDemoMode(false);
+    trackingService.stopDemo(parcelId);
+    
+    toast.info('Demo mode stopped. Parcel status changes are now permanent in the system.', {
+      position: "top-right",
+      autoClose: 3000,
+    });
+  }, [parcelId]);
 
   // Initialize tracking on mount
   useEffect(() => {
@@ -120,6 +150,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     return () => {
       if (parcelId) {
         trackingService.stopTracking(parcelId);
+        trackingService.stopDemo(parcelId);
       }
     };
   }, [parcelId, autoRefresh, startTracking]);
@@ -131,7 +162,8 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
         status: parcel.status,
         current_location: parcel.pickup_location_text || 'Location not specified',
         estimated_delivery: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
+        progress: 0
       });
     }
   }, [parcel]);
@@ -205,7 +237,7 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
               isTracking ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
             }`}></div>
             <span className="text-sm text-gray-600">
-              {isTracking ? 'Live Tracking Active' : 'Tracking Inactive'}
+              {isDemoMode ? '🎬 Demo Mode Active' : isTracking ? 'Live Tracking Active' : 'Tracking Inactive'}
             </span>
           </div>
           {lastUpdate && (
@@ -230,23 +262,50 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
           
           <button
             onClick={toggleAutoRefresh}
+            disabled={isDemoMode}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              autoRefresh
-                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              isDemoMode
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : autoRefresh
+                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
+            {isDemoMode ? 'Demo Active' : autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
           </button>
 
-          <button
-            onClick={startDemo}
-            className="px-3 py-1 text-sm rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
-          >
-            🎬 Demo
-          </button>
+          {isDemoMode ? (
+            <button
+              onClick={stopDemo}
+              className="px-3 py-1 text-sm rounded-md bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+            >
+              🛑 Stop Demo
+            </button>
+          ) : (
+            <button
+              onClick={startDemo}
+              className="px-3 py-1 text-sm rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+            >
+              🎬 Start Demo
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Demo Mode Notice */}
+      {isDemoMode && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-purple-800">
+              Demo Mode Active
+            </span>
+          </div>
+          <p className="text-xs text-purple-600 mt-1">
+            Watch the map, progress bars, and status indicators update in real-time!
+          </p>
+        </div>
+      )}
 
       {/* Current Status */}
       {trackingData && (
@@ -261,6 +320,11 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
                 <p className="text-sm text-gray-600">
                   {trackingData.current_location || 'Location not specified'}
                 </p>
+                {trackingData.progress !== undefined && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Progress: {trackingData.progress}%
+                  </p>
+                )}
               </div>
             </div>
             <span className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-${getStatusColor(trackingData.status)}-500`}>
@@ -311,6 +375,9 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
                 <span className="text-gray-700">{update.message}</span>
                 {update.location && (
                   <span className="text-gray-600">- {update.location}</span>
+                )}
+                {update.progress !== undefined && (
+                  <span className="text-blue-600">({update.progress}%)</span>
                 )}
               </div>
             ))}
