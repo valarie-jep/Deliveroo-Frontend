@@ -1,16 +1,29 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getParcels, cancelParcel,updateParcelDestination } from "../redux/parcelSlice";
 import Navbar from "../components/Navbar";
+import DestinationModal from '../components/DestinationModal';
+
 
 
 const ParcelCard = ({ parcel }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const loading = useSelector((state) => state.parcels.loading);
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [selectedParcelForDestination, setSelectedParcelForDestination] = useState(null);
   
-
+  const handleDestinationConfirm = ({ newDestinationText }) => {
+  if (selectedParcelForDestination) {
+    dispatch(updateParcelDestination({
+      parcelId: selectedParcelForDestination.id,
+      newDestination: newDestinationText,
+    }));
+  }
+  setIsModalOpen(false); 
+  setSelectedParcelForDestination(null); 
+};
 
   const handleCancel = () => {
     if (
@@ -83,19 +96,28 @@ const ParcelCard = ({ parcel }) => {
           </button>
         )}
         {parcel.status !== "cancelled" && parcel.status !== "delivered" && (
-            <button
-              onClick={() => {
-                const newDestination = prompt("Enter new destination:");
-                if (newDestination) {
-                  dispatch(updateParcelDestination({ id: parcel.id, newDestination }));
-                }
-              }}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-md transition"
-            >
-              Change Destination
-            </button>
-          )}
+          <button
+            onClick={() => { 
+              setSelectedParcelForDestination(parcel); 
+              setIsModalOpen(true); 
+            }}
+            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-md transition"
+          >
+            Change Destination
+          </button>
+        )}
       </div>
+      {selectedParcelForDestination && ( 
+        <DestinationModal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedParcelForDestination(null);
+            }}
+            onConfirm={handleDestinationConfirm}
+            currentDestination={selectedParcelForDestination.destination_location_text}
+          />
+      )}
     </div>
   );
 };
@@ -239,7 +261,7 @@ const Parcels = () => {
                     onClick={() => {
                       const newDestination = prompt("Enter new destination:");
                       if (newDestination) {
-                        dispatch(updateParcelDestination({ id: parcel.id, newDestination }));
+                        dispatch(updateParcelDestination({ parcelId: parcel.id, newDestination }));
                       }
                     }}
                     className="bg-orange-500 text-white px-3 py-1 rounded-md text-xs hover:bg-orange-600 transition"
