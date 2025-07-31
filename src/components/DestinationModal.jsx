@@ -17,8 +17,6 @@ const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) =>
     }
   }, [isOpen, currentDestination]);
 
-<<<<<<< HEAD
-  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -54,8 +52,6 @@ const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) =>
   if (!isOpen) return null;
 
   return (
-<<<<<<< HEAD
-    
     <LoadScript
       googleMapsApiKey={process.env.REACT_APP_Maps_API_KEY} 
       libraries={libraries}
