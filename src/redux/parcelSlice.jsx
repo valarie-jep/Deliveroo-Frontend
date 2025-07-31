@@ -7,6 +7,7 @@ const BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const getAuthHeaders = (thunkAPI) => {
   const token = thunkAPI.getState().auth.token;
+  console.log('Auth token:', token ? 'Present' : 'Missing');
   return { headers: { Authorization: `Bearer ${token}` } };
 };
 
@@ -27,6 +28,12 @@ export const createParcel = createAsyncThunk(
   'parcels/createParcel',
   async (parcelData, thunkAPI) => {
     try {
+      console.log('Making API request to create parcel:', {
+        url: `${BASE_URL}/parcels`,
+        data: parcelData,
+        headers: getAuthHeaders(thunkAPI)
+      });
+      
       const res = await axios.post(`${BASE_URL}/parcels`, parcelData, getAuthHeaders(thunkAPI));
       const createdParcel = res.data;
 
@@ -42,8 +49,31 @@ export const createParcel = createAsyncThunk(
 
       return createdParcel;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to create parcel';
-      return thunkAPI.rejectWithValue(message);
+      console.error('Parcel creation error:', {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        message: error?.message,
+        config: {
+          url: error?.config?.url,
+          method: error?.config?.method,
+          headers: error?.config?.headers
+        }
+      });
+      
+      // Try to get more detailed error information
+      let errorMessage = 'Failed to create parcel';
+      if (error?.response?.status === 500) {
+        errorMessage = 'Backend server error. Please try again later or contact support.';
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      return thunkAPI.rejectWithValue(errorMessage);
     }
   }
 );

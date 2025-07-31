@@ -4,6 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import Navbar from "../components/Navbar";
 
+// Static libraries array to prevent LoadScript reloading
+const GOOGLE_MAPS_LIBRARIES = ["places"];
+
 const containerStyle = {
   width: "100%",
   height: "500px",
@@ -164,7 +167,7 @@ const TrackingPage = () => {
               ) : (
                 <LoadScript
                   googleMapsApiKey={googleMapsApiKey}
-                  libraries={["places"]}
+                  libraries={GOOGLE_MAPS_LIBRARIES}
                   onError={handleScriptLoadError}
                 >
                   <GoogleMap

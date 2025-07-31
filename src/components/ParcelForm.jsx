@@ -7,6 +7,9 @@ import LocationAutocomplete from "./LocationAutocomplete";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// Static libraries array to prevent LoadScript reloading
+const GOOGLE_MAPS_LIBRARIES = ["places"];
+
 const ParcelForm = ({ setSuccess }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -71,11 +74,11 @@ const ParcelForm = ({ setSuccess }) => {
       return "Destination must be a valid address (at least 5 characters).";
     }
 
-    if (hasValidApiKey && !pickupCoords) {
+    if (hasValidApiKey && !pickupCoords && pickup.length > 0) {
       return "Please select a valid pickup location from the suggestions.";
     }
 
-    if (hasValidApiKey && !destinationCoords) {
+    if (hasValidApiKey && !destinationCoords && destination.length > 0) {
       return "Please select a valid destination from the suggestions.";
     }
 
@@ -114,13 +117,14 @@ const ParcelForm = ({ setSuccess }) => {
         return;
       }
 
-      // Submit formatted addresses; if backend needs coordinates, uncomment below
+      // Submit formatted addresses with coordinates
       const parcelData = {
-        user_id: user.id,
         pickup_location_text: pickup,
         destination_location_text: destination,
-        // pickup_location: pickupCoords ? `${pickupCoords.lat},${pickupCoords.lng}` : pickup,
-        // destination_location: destinationCoords ? `${destinationCoords.lat},${destinationCoords.lng}` : destination,
+        pick_up_latitude: pickupCoords ? pickupCoords.lat : null,
+        pick_up_longitude: pickupCoords ? pickupCoords.lng : null,
+        destination_latitude: destinationCoords ? destinationCoords.lat : null,
+        destination_longitude: destinationCoords ? destinationCoords.lng : null,
         weight: weight ? Number(weight) : undefined,
         description,
         sender_name: senderName,
@@ -128,6 +132,8 @@ const ParcelForm = ({ setSuccess }) => {
         recipient_name: recipientName,
         recipient_phone_number: recipientPhone,
       };
+
+      console.log('Submitting parcel data:', parcelData);
 
       try {
         const result = await dispatch(createParcel(parcelData)).unwrap();
@@ -151,10 +157,15 @@ const ParcelForm = ({ setSuccess }) => {
           300
         );
       } catch (err) {
-        const errorMessage =
-          err?.message || err?.error || "Failed to create parcel.";
+        console.error('Parcel creation failed:', err);
+        const errorMessage = err?.message || err?.error || "Failed to create parcel.";
         setError(errorMessage);
         toast.error(errorMessage);
+        
+        // If it's a 500 error, suggest retrying
+        if (err?.message?.includes('500') || err?.message?.includes('Backend server error')) {
+          toast.info('The server is experiencing issues. Please try again in a few moments.');
+        }
       }
     },
     [
@@ -163,6 +174,8 @@ const ParcelForm = ({ setSuccess }) => {
       user,
       pickup,
       destination,
+      pickupCoords,
+      destinationCoords,
       weight,
       description,
       senderName,
@@ -177,7 +190,7 @@ const ParcelForm = ({ setSuccess }) => {
   return (
     <LoadScript
       googleMapsApiKey={googleMapsApiKey}
-      libraries={["places"]}
+      libraries={GOOGLE_MAPS_LIBRARIES}
       onError={() =>
         toast.error(
           "Failed to load Google Maps API. Please check your API key."
@@ -192,13 +205,14 @@ const ParcelForm = ({ setSuccess }) => {
             <LocationAutocomplete
               value={pickup}
               onChange={setPickup}
-              onLocationSelect={(place) =>
-                setPickupCoords(
-                  place.lat && place.lng
-                    ? { lat: place.lat, lng: place.lng }
-                    : null
-                )
-              }
+              onLocationSelect={(place) => {
+                console.log('Pickup location selected:', place);
+                const coords = place.lat && place.lng
+                  ? { lat: place.lat, lng: place.lng }
+                  : null;
+                console.log('Setting pickup coordinates:', coords);
+                setPickupCoords(coords);
+              }}
               placeholder="Start typing to search locations..."
               className="w-full border rounded px-3 py-2"
             />
@@ -211,13 +225,14 @@ const ParcelForm = ({ setSuccess }) => {
             <LocationAutocomplete
               value={destination}
               onChange={setDestination}
-              onLocationSelect={(place) =>
-                setDestinationCoords(
-                  place.lat && place.lng
-                    ? { lat: place.lat, lng: place.lng }
-                    : null
-                )
-              }
+              onLocationSelect={(place) => {
+                console.log('Destination location selected:', place);
+                const coords = place.lat && place.lng
+                  ? { lat: place.lat, lng: place.lng }
+                  : null;
+                console.log('Setting destination coordinates:', coords);
+                setDestinationCoords(coords);
+              }}
               placeholder="Start typing to search locations..."
               className="w-full border rounded px-3 py-2"
             />

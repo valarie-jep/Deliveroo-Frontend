@@ -12,14 +12,28 @@ const LocationAutocomplete = ({
   const [inputValue, setInputValue] = useState(value || '');
   const autocompleteService = useRef(null);
   const placesService = useRef(null);
+  const [isValidLocation, setIsValidLocation] = useState(false);
 
   useEffect(() => {
-    if (window.google && window.google.maps) {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      placesService.current = new window.google.maps.places.PlacesService(
-        document.createElement('div')
-      );
-    }
+    const initializeGoogleMaps = () => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        try {
+          console.log('Google Maps API loaded, initializing Places service...');
+          autocompleteService.current = new window.google.maps.places.AutocompleteService();
+          placesService.current = new window.google.maps.places.PlacesService(
+            document.createElement('div')
+          );
+          console.log('Google Maps Places API initialized successfully');
+        } catch (error) {
+          console.error('Failed to initialize Google Maps Places API:', error);
+        }
+      } else {
+        console.log('Google Maps API not ready yet, retrying in 1 second...');
+        setTimeout(initializeGoogleMaps, 1000);
+      }
+    };
+
+    initializeGoogleMaps();
   }, []);
 
   useEffect(() => {
@@ -30,8 +44,10 @@ const LocationAutocomplete = ({
     const newValue = e.target.value;
     setInputValue(newValue);
     onChange(newValue);
+    setIsValidLocation(false); // Reset validation when user types
 
     if (newValue.length > 2 && autocompleteService.current) {
+      console.log('Requesting place predictions for:', newValue);
       autocompleteService.current.getPlacePredictions(
         {
           input: newValue,
@@ -39,15 +55,21 @@ const LocationAutocomplete = ({
           types: ['establishment', 'geocode']
         },
         (predictions, status) => {
+          console.log('Place predictions response:', { status, predictionsCount: predictions?.length });
           if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
             setSuggestions(predictions);
             setShowSuggestions(true);
           } else {
+            console.warn('Places API error:', status);
             setSuggestions([]);
             setShowSuggestions(false);
           }
         }
       );
+    } else if (newValue.length > 2) {
+      console.log('Autocomplete service not ready yet, but user typed:', newValue);
+      setSuggestions([]);
+      setShowSuggestions(false);
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -59,8 +81,35 @@ const LocationAutocomplete = ({
     onChange(suggestion.description);
     setShowSuggestions(false);
     setSuggestions([]);
+    setIsValidLocation(true);
 
-    if (onLocationSelect) {
+    if (onLocationSelect && placesService.current) {
+      // Get detailed place information including coordinates
+      placesService.current.getDetails(
+        {
+          placeId: suggestion.place_id,
+          fields: ['geometry', 'formatted_address']
+        },
+        (place, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+            const location = place.geometry?.location;
+            if (location) {
+              onLocationSelect({
+                ...suggestion,
+                lat: location.lat(),
+                lng: location.lng(),
+                formatted_address: place.formatted_address
+              });
+            } else {
+              onLocationSelect(suggestion);
+            }
+          } else {
+            console.warn('Failed to get place details:', status);
+            onLocationSelect(suggestion);
+          }
+        }
+      );
+    } else if (onLocationSelect) {
       onLocationSelect(suggestion);
     }
   };
@@ -93,9 +142,35 @@ const LocationAutocomplete = ({
         onBlur={handleInputBlur}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className={`w-full border rounded px-3 py-2 ${className}`}
+        className={`w-full border rounded px-3 py-2 ${className} ${
+          inputValue && !isValidLocation ? 'border-yellow-500' : ''
+        }`}
         autoComplete="off"
       />
+      {!autocompleteService.current && (
+        <div className="text-xs text-gray-500 mt-1">
+          💡 Google Maps suggestions not available. You can still enter locations manually.
+          <button 
+            onClick={() => console.log('API Status:', { 
+              google: !!window.google, 
+              maps: !!window.google?.maps, 
+              places: !!window.google?.maps?.places,
+              autocompleteService: !!autocompleteService.current 
+            })}
+            className="ml-2 text-blue-500 underline"
+          >
+            Debug API
+          </button>
+        </div>
+      )}
+      {inputValue && !isValidLocation && (
+        <div className="text-xs text-yellow-600 mt-1">
+          {autocompleteService.current 
+            ? "Please select a location from the suggestions for better accuracy"
+            : "Google Maps API not available. You can still enter a location manually."
+          }
+        </div>
+      )}
       
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
