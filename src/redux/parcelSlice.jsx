@@ -202,6 +202,27 @@ export const getParcelById = createAsyncThunk(
   }
 );
 
+// Track parcel by ID (using existing parcels endpoint)
+export const trackParcel = createAsyncThunk(
+  'parcels/trackParcel',
+  async (parcelId, thunkAPI) => {
+    try {
+      const res = await axios.get(`${BASE_URL}/parcels`, getAuthHeaders(thunkAPI));
+      const parcels = res.data;
+      const parcel = parcels.find(p => p.id === parseInt(parcelId));
+      
+      if (!parcel) {
+        throw new Error('Parcel not found');
+      }
+      
+      return parcel;
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to track parcel';
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 // ------------------ SLICE ------------------
 
 const parcelSlice = createSlice({
@@ -325,6 +346,25 @@ const parcelSlice = createSlice({
       })
       .addCase(getParcelById.rejected, (state, action) => {
         state.error = action.payload || action.error?.message || 'Failed to fetch parcel details';
+        notify.error(state.error);
+      })
+
+      // TRACK PARCEL
+      .addCase(trackParcel.pending, (state) => {
+        state.error = null;
+        notify.once('track-parcel', 'Tracking parcel…', 'info');
+      })
+      .addCase(trackParcel.fulfilled, (state, action) => {
+        const parcel = action.payload;
+        const index = state.list.findIndex((p) => p.id === parcel.id);
+        if (index === -1) {
+          state.list.push(parcel);
+        } else {
+          state.list[index] = parcel;
+        }
+      })
+      .addCase(trackParcel.rejected, (state, action) => {
+        state.error = action.payload || action.error?.message || 'Failed to track parcel';
         notify.error(state.error);
       });
   },
