@@ -3,32 +3,28 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LoadScript } from "@react-google-maps/api"; 
 import LocationAutocomplete from "./LocationAutocomplete";
 
-
 const libraries = ["places"];
 
 const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) => {
-  
   const [destinationText, setDestinationText] = useState(currentDestination || '');
-  
   const [destinationCoords, setDestinationCoords] = useState(null); 
   const modalRef = useRef(null);
 
- 
   useEffect(() => {
     if (isOpen) {
       setDestinationText(currentDestination || '');
-      
       setDestinationCoords(null);
     }
   }, [isOpen, currentDestination]);
 
+<<<<<<< HEAD
   
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         if (!event.target.closest('.pac-container')) {
-        onClose();
-      }
+          onClose();
+        }
       }
     };
 
@@ -47,7 +43,6 @@ const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) =>
     e.preventDefault();
     
     if (destinationText.trim()) {
-      
       onConfirm({
         newDestinationText: destinationText,
         newDestinationCoords: destinationCoords
@@ -59,6 +54,7 @@ const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) =>
   if (!isOpen) return null;
 
   return (
+<<<<<<< HEAD
     
     <LoadScript
       googleMapsApiKey={process.env.REACT_APP_Maps_API_KEY} 

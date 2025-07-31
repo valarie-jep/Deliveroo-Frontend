@@ -256,5 +256,3 @@ const parcelSlice = createSlice({
 
 export const { clearError, clearSuccess, updateParcelStatus } = parcelSlice.actions;
 export default parcelSlice.reducer;
-
-
