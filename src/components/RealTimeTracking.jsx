@@ -178,7 +178,14 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
           </div>
           {lastUpdate && (
             <span className="text-xs text-gray-500">
-              {lastUpdate.toLocaleTimeString()}
+              Last update: {(() => {
+                try {
+                  const date = new Date(lastUpdate);
+                  return isNaN(date.getTime()) ? 'Invalid time' : date.toLocaleTimeString();
+                } catch (error) {
+                  return 'Invalid time';
+                }
+              })()}
             </span>
           )}
         </div>
@@ -222,7 +229,21 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
             </span>
           </div>
           <p className="text-xs text-blue-600 mt-1">
-            Expected by {estimatedArrival.toLocaleDateString()} at {estimatedArrival.toLocaleTimeString()}
+            Expected by {(() => {
+              try {
+                const date = new Date(estimatedArrival);
+                return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+              } catch (error) {
+                return 'Invalid date';
+              }
+            })()} at {(() => {
+              try {
+                const date = new Date(estimatedArrival);
+                return isNaN(date.getTime()) ? 'Invalid time' : date.toLocaleTimeString();
+              } catch (error) {
+                return 'Invalid time';
+              }
+            })()}
           </p>
         </div>
       )}

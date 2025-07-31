@@ -156,19 +156,60 @@ const Parcels = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">My Parcels</h1>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => navigate("/parcels/new")}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md font-medium transition"
-          >
-            Create New Parcel
-          </button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Header with Search and Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+          <h1 className="text-3xl font-bold text-orange-600">My Parcels</h1>
+          
+          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            {/* Search */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search parcels..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            >
+              <option value="">Sort by...</option>
+              <option value="status">Status</option>
+              <option value="sender">Sender</option>
+              <option value="created_at">Date Created</option>
+            </select>
+            
+            {/* View Toggle */}
+            <button
+              onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Switch to {viewMode === "grid" ? "List" : "Grid"} View
+            </button>
+            
+            {/* Create New Parcel */}
+            <button
+              onClick={() => navigate("/parcels/new")}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
+            >
+              Create New Parcel
+            </button>
+          </div>
         </div>
-      </div>
-      
-      <div className="p-4 max-w-6xl mx-auto w-full">
+        
+        {/* Parcels Content */}
+        <div className="p-4 max-w-6xl mx-auto w-full">
   {sortedList.length === 0 ? (
     <p className="text-center text-gray-600">No parcels found.</p>
   ) : viewMode === "grid" ? (
@@ -262,9 +303,8 @@ const Parcels = () => {
         </tbody>
       </table>
     </div>
-  )}
-</div>
-
+        )}
+      </div>
     </div>
   );
 };

@@ -47,7 +47,6 @@ const LocationAutocomplete = ({
     setIsValidLocation(false); // Reset validation when user types
 
     if (newValue.length > 2 && autocompleteService.current) {
-      console.log('Requesting place predictions for:', newValue);
       autocompleteService.current.getPlacePredictions(
         {
           input: newValue,
@@ -55,19 +54,16 @@ const LocationAutocomplete = ({
           types: ['establishment', 'geocode']
         },
         (predictions, status) => {
-          console.log('Place predictions response:', { status, predictionsCount: predictions?.length });
           if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
             setSuggestions(predictions);
             setShowSuggestions(true);
           } else {
-            console.warn('Places API error:', status);
             setSuggestions([]);
             setShowSuggestions(false);
           }
         }
       );
     } else if (newValue.length > 2) {
-      console.log('Autocomplete service not ready yet, but user typed:', newValue);
       setSuggestions([]);
       setShowSuggestions(false);
     } else {

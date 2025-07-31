@@ -215,7 +215,21 @@ const JourneyMetrics = ({ parcel, isDemoMode = false }) => {
               </span>
             </div>
             <p className="text-xs text-indigo-600 mt-1">
-              Expected by {new Date(estimatedArrival).toLocaleDateString()} at {new Date(estimatedArrival).toLocaleTimeString()}
+              Expected by {(() => {
+                try {
+                  const date = new Date(estimatedArrival);
+                  return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+                } catch (error) {
+                  return 'Invalid date';
+                }
+              })()} at {(() => {
+                try {
+                  const date = new Date(estimatedArrival);
+                  return isNaN(date.getTime()) ? 'Invalid time' : date.toLocaleTimeString();
+                } catch (error) {
+                  return 'Invalid time';
+                }
+              })()}
             </p>
           </div>
         )}
@@ -239,14 +253,29 @@ const JourneyMetrics = ({ parcel, isDemoMode = false }) => {
             <div className="flex justify-between">
               <span className="text-gray-600">Created:</span>
               <span className="font-medium text-gray-900">
-                {parcel.created_at ? new Date(parcel.created_at).toLocaleDateString() : 'N/A'}
+                {(() => {
+                  try {
+                    if (!parcel.created_at) return 'N/A';
+                    const date = new Date(parcel.created_at);
+                    return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+                  } catch (error) {
+                    return 'Invalid date';
+                  }
+                })()}
               </span>
             </div>
             {parcel.last_updated && (
               <div className="flex justify-between">
                 <span className="text-gray-600">Last Updated:</span>
                 <span className="font-medium text-gray-900">
-                  {new Date(parcel.last_updated).toLocaleString()}
+                  {(() => {
+                    try {
+                      const date = new Date(parcel.last_updated);
+                      return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleString();
+                    } catch (error) {
+                      return 'Invalid date';
+                    }
+                  })()}
                 </span>
               </div>
             )}

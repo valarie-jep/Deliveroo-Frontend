@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import TrackingMap from '../components/TrackingMap';
 import RealTimeTracking from '../components/RealTimeTracking';
 import RouteProgress from '../components/RouteProgress';
 import JourneyMetrics from '../components/JourneyMetrics';
 import LiveTracking from '../components/LiveTracking';
+import Navbar from '../components/Navbar';
 import { calculateMidpoint } from '../utils/distanceCalculator';
 import { fetchParcels } from '../redux/parcelSlice';
 
@@ -20,16 +21,12 @@ const TrackingPage = () => {
   const { parcelId } = useParams();
   const dispatch = useDispatch();
   
-  // Debug logging
-  console.log('🔍 TrackingPage - ParcelId from URL:', parcelId);
-  console.log('🔍 TrackingPage - All parcels in store:', useSelector(state => state.parcels.parcels));
+  const parcels = useSelector(state => state.parcels.parcels);
   
   const parcel = useSelector(state => 
     state.parcels.parcels.find(p => p.id === parseInt(parcelId))
   );
   
-  console.log('🔍 TrackingPage - Found parcel:', parcel);
-
   const [mapCenter, setMapCenter] = useState(null);
   const [mapZoom, setMapZoom] = useState(12);
   const [currentParcel, setCurrentParcel] = useState(parcel);
@@ -38,7 +35,6 @@ const TrackingPage = () => {
   // Fetch parcel if not found in store
   useEffect(() => {
     if (!parcel && parcelId) {
-      console.log('🔍 Parcel not found in store, fetching parcels...');
       dispatch(fetchParcels());
     }
   }, [parcel, parcelId, dispatch]);
@@ -88,7 +84,6 @@ const TrackingPage = () => {
 
   // Handle tracking updates from LiveTracking component
   const handleTrackingUpdate = useCallback((trackingData) => {
-    console.log('🔄 Tracking update received:', trackingData);
     
     // Update current parcel with new tracking data
     const updatedParcel = {
@@ -105,14 +100,13 @@ const TrackingPage = () => {
 
     // Update map view if we have new coordinates
     if (trackingData.map_position) {
-      console.log('🗺️ Updating map position:', trackingData.map_position);
       setMapCenter(trackingData.map_position);
       setMapZoom(14); // Zoom in for current position
     }
 
     // Show demo mode notification
     if (trackingData.isDemoMode) {
-      console.log('🎬 Demo mode active - updating all components');
+      // console.log('🎬 Demo mode active - updating all components'); // Removed console.log
     }
   }, [currentParcel]);
 
@@ -151,31 +145,54 @@ const TrackingPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="text-gray-600">
-                <PackageIcon />
+              <div className="flex items-center space-x-2">
+                <div className="text-gray-600">
+                  <PackageIcon />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Parcel #{parcel.id} Tracking
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    {parcel.pickup_location_text} → {parcel.destination_location_text}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Parcel #{parcel.id} Tracking
-                </h1>
-                <p className="text-sm text-gray-600">
-                  {parcel.pickup_location_text} → {parcel.destination_location_text}
-                </p>
-              </div>
+              
+              {/* Status Badge */}
+              <span className={`px-3 py-1 rounded-full text-sm font-medium text-white ${
+                parcel.status === 'delivered' ? 'bg-green-500' :
+                parcel.status === 'in_transit' ? 'bg-blue-500' :
+                'bg-yellow-500'
+              }`}>
+                {parcel.status.replace('_', ' ').toUpperCase()}
+              </span>
             </div>
             
-            {/* Demo Mode Indicator */}
-            {isDemoMode && (
-              <div className="flex items-center space-x-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium">Demo Mode</span>
-              </div>
-            )}
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-3">
+              <Link 
+                to="/parcels" 
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                ← Back to Parcels
+              </Link>
+              
+              {/* Demo Mode Indicator */}
+              {isDemoMode && (
+                <div className="flex items-center space-x-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">Demo Mode</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -242,7 +259,7 @@ const TrackingPage = () => {
                 </p>
               </div>
               <div className="p-4">
-                <RealTimeTracking parcel={currentParcel} isDemoMode={isDemoMode} />
+                <RealTimeTracking parcelId={parcelId} isDemoMode={isDemoMode} />
               </div>
             </div>
           </div>

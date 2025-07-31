@@ -85,7 +85,14 @@ const TrackingStatus = ({ parcel }) => {
             Parcel #{parcel.id}
           </h3>
           <p className="text-sm text-gray-500">
-            Created on {new Date(parcel.created_at).toLocaleDateString()}
+            Created on {(() => {
+              try {
+                const date = new Date(parcel.created_at);
+                return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+              } catch (error) {
+                return 'Invalid date';
+              }
+            })()}
           </p>
         </div>
         <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(parcel.status)}`}>

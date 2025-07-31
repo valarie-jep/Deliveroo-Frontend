@@ -1,0 +1,5 @@
+[33mb0a6cb0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtest2[m[33m, [m[1;31morigin/test2[m[33m)[m Fix date formatting errors in LiveTracking component
+[33mb0d5711[m Fix API URL configuration for tracking endpoints
+[33m13711a6[m removed some errors
+[33m73cd150[m removed sendgrid
+[33m19d26ff[m fixed build
