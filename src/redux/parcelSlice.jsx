@@ -155,12 +155,10 @@ const parcelSlice = createSlice({
       .addCase(createParcel.pending, (state) => {
         state.loading = true;
         state.error = null;
-        console.log('📝 Creating parcel...');
       })
       .addCase(createParcel.fulfilled, (state, action) => {
         state.loading = false;
         state.success = 'Parcel created successfully';
-        console.log('✅ Parcel created in Redux:', action.payload);
         
         // Ensure parcels is an array
         if (!Array.isArray(state.parcels)) {
@@ -169,19 +167,16 @@ const parcelSlice = createSlice({
         
         // Add new parcel to the beginning of the list
         state.parcels.unshift(action.payload);
-        console.log('📦 Updated parcels list:', state.parcels);
       })
       .addCase(createParcel.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to create parcel';
-        console.error('❌ Parcel creation failed:', action.payload);
       })
 
       // FETCH PARCELS
       .addCase(fetchParcels.pending, (state) => {
         state.loading = true;
         state.error = null;
-        console.log('📡 Fetching parcels...');
       })
       .addCase(fetchParcels.fulfilled, (state, action) => {
         state.loading = false;
@@ -195,14 +190,10 @@ const parcelSlice = createSlice({
         // Handle different response formats
         const parcelsData = action.payload.parcels || action.payload || [];
         state.parcels = parcelsData;
-        
-        console.log('📦 Fetched parcels from API:', action.payload);
-        console.log('📦 Current parcels in state:', state.parcels);
       })
       .addCase(fetchParcels.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to fetch parcels';
-        console.error('❌ Failed to fetch parcels:', action.payload);
       })
       // Update parcel
       .addCase(updateParcel.pending, (state) => {

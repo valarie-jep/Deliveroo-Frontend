@@ -10,30 +10,6 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
   });
 
-  // Show loading state if Google Maps is not loaded
-  if (loadError) {
-    return (
-      <div className="bg-gray-100 rounded-lg p-8 text-center">
-        <div className="text-red-500 mb-4">
-          <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold mb-2">Map Loading Error</h3>
-        <p className="text-gray-600">Unable to load the map. Please check your internet connection.</p>
-      </div>
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <div className="bg-gray-100 rounded-lg p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading map...</p>
-      </div>
-    );
-  }
-
   // Calculate current position based on parcel status
   const calculateCurrentPosition = useCallback((parcelData) => {
     if (!parcelData) return null;
@@ -109,6 +85,46 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
     }
   }, []);
 
+  // Update route path when parcel changes
+  useEffect(() => {
+    if (parcel) {
+      const path = generateRoutePath(parcel);
+      setRoutePath(path);
+    }
+  }, [parcel, generateRoutePath]);
+
+  // Update current position when parcel status changes
+  useEffect(() => {
+    if (parcel) {
+      const position = calculateCurrentPosition(parcel);
+      // You can use position for current location marker if needed
+    }
+  }, [parcel, calculateCurrentPosition]);
+
+  // Show loading state if Google Maps is not loaded
+  if (loadError) {
+    return (
+      <div className="bg-gray-100 rounded-lg p-8 text-center">
+        <div className="text-red-500 mb-4">
+          <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Map Loading Error</h3>
+        <p className="text-gray-600">Unable to load the map. Please check your internet connection.</p>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="bg-gray-100 rounded-lg p-8 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading map...</p>
+      </div>
+    );
+  }
+
   // Create custom marker icon
   const createMarkerIcon = (color = 'blue', label = '') => {
     return {
@@ -179,36 +195,6 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
         return '';
     }
   };
-
-  // Update current position periodically for in_transit parcels
-  useEffect(() => {
-    if (parcel?.status === 'in_transit' || isDemoMode) {
-      const interval = setInterval(() => {
-        const newPosition = calculateCurrentPosition(parcel);
-        if (newPosition) {
-          // setCurrentPosition(newPosition); // This line was removed as per the edit hint
-          // setIsAnimating(true); // This line was removed as per the edit hint
-          // setTimeout(() => setIsAnimating(false), 1000); // This line was removed as per the edit hint
-        }
-      }, 5000); // Update every 5 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [parcel, isDemoMode, calculateCurrentPosition]);
-
-  // Generate route path when parcel changes
-  useEffect(() => {
-    const path = generateRoutePath(parcel);
-    setRoutePath(path);
-  }, [parcel, generateRoutePath]);
-
-  // Calculate current position when parcel changes
-  useEffect(() => {
-    // Update current position when parcel changes
-    if (parcel?.status === 'in_transit' || isDemoMode) {
-      // Current position calculation temporarily disabled
-    }
-  }, [parcel, isDemoMode]);
 
   // Get coordinates from parcel
   const getPickupCoordinates = () => {

@@ -24,8 +24,13 @@ const ParcelForm = ({ setSuccess }) => {
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const loading = useSelector((state) => state.parcels.loading);
   const user = useSelector((state) => state.auth.user);
+
+  // Add missing state variables
+  const [pickupLocationText, setPickupLocationText] = useState("");
+  const [destinationLocationText, setDestinationLocationText] = useState("");
 
   const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
   const hasValidApiKey =
@@ -101,39 +106,22 @@ const ParcelForm = ({ setSuccess }) => {
     setIsLoading(true);
     setError(null);
 
-    console.log('📝 Starting parcel creation...');
-    console.log('📍 Pickup coordinates:', pickupCoords);
-    console.log('🎯 Destination coordinates:', destinationCoords);
-    console.log('📦 Form data:', {
-      sender_name,
-      recipient_name,
-      description,
-      weight,
-      pickup_location_text,
-      destination_location_text
-    });
-
     try {
       const parcelData = {
-        sender_name,
-        recipient_name,
+        sender_name: senderName,
+        recipient_name: recipientName,
         description,
         pick_up_latitude: pickupCoords ? pickupCoords.lat : null,
         pick_up_longitude: pickupCoords ? pickupCoords.lng : null,
         destination_latitude: destinationCoords ? destinationCoords.lat : null,
         destination_longitude: destinationCoords ? destinationCoords.lng : null,
         weight: weight ? Number(weight) : undefined,
-        pickup_location_text,
-        destination_location_text,
+        pickup_location_text: pickup,
+        destination_location_text: destination,
       };
-
-      console.log('📤 Submitting parcel data:', parcelData);
 
       const result = await dispatch(createParcel(parcelData)).unwrap();
       
-      console.log('✅ Parcel created successfully:', result);
-      console.log('🆔 New parcel ID:', result.id);
-
       if (setSuccess) setSuccess('Parcel created successfully!');
       
       // Reset form
@@ -141,8 +129,8 @@ const ParcelForm = ({ setSuccess }) => {
       setRecipientName('');
       setDescription('');
       setWeight('');
-      setPickupLocationText('');
-      setDestinationLocationText('');
+      setPickup('');
+      setDestination('');
       setPickupCoords(null);
       setDestinationCoords(null);
       
@@ -152,7 +140,6 @@ const ParcelForm = ({ setSuccess }) => {
       });
       
     } catch (err) {
-      console.error('❌ Parcel creation failed:', err);
       setError(err.message || 'Failed to create parcel');
     } finally {
       setIsLoading(false);
@@ -178,11 +165,9 @@ const ParcelForm = ({ setSuccess }) => {
               value={pickup}
               onChange={setPickup}
               onLocationSelect={(place) => {
-                console.log('Pickup location selected:', place);
                 const coords = place.lat && place.lng
                   ? { lat: place.lat, lng: place.lng }
                   : null;
-                console.log('Setting pickup coordinates:', coords);
                 setPickupCoords(coords);
               }}
               placeholder="Start typing to search locations..."
@@ -198,11 +183,9 @@ const ParcelForm = ({ setSuccess }) => {
               value={destination}
               onChange={setDestination}
               onLocationSelect={(place) => {
-                console.log('Destination location selected:', place);
                 const coords = place.lat && place.lng
                   ? { lat: place.lat, lng: place.lng }
                   : null;
-                console.log('Setting destination coordinates:', coords);
                 setDestinationCoords(coords);
               }}
               placeholder="Start typing to search locations..."

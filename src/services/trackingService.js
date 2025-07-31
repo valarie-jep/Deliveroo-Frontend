@@ -25,32 +25,23 @@ class TrackingService {
     console.log('📊 Presentation mode disabled - normal rate limiting');
   }
 
-  // Start real-time tracking
+  // Start tracking with proper cleanup
   startTracking(parcelId, onUpdate, onError) {
-    console.log(`🚀 Starting live tracking for parcel: ${parcelId}`);
-    
-    // Don't start if demo is active
-    if (this.isDemoActive.get(parcelId)) {
-      console.log('⚠️ Demo is active, skipping real tracking start');
-      return;
-    }
-
     // Stop any existing tracking first
     this.stopTracking(parcelId);
     
     this.isTracking.set(parcelId, true);
     this.isDemoActive.set(parcelId, false);
-    this.errorCounts.set(parcelId, 0);
 
     // Initial fetch
     this.fetchTrackingData(parcelId, onUpdate, onError);
 
-    // Set up polling interval with longer interval to prevent rate limiting
+    // Set up polling interval
     const interval = setInterval(() => {
-      if (this.isTracking.get(parcelId) && !this.isDemoActive.get(parcelId)) {
+      if (this.isTracking.get(parcelId)) {
         this.fetchTrackingData(parcelId, onUpdate, onError);
       }
-    }, 30000); // Poll every 30 seconds for faster real-time updates
+    }, 30000); // 30 seconds
 
     this.trackingIntervals.set(parcelId, interval);
     
@@ -62,10 +53,8 @@ class TrackingService {
     });
   }
 
-  // Stop real-time tracking
+  // Stop tracking with proper cleanup
   stopTracking(parcelId) {
-    console.log(`🛑 Stopping tracking for parcel ${parcelId}`);
-    
     this.isTracking.set(parcelId, false);
     this.isDemoActive.set(parcelId, false);
 
@@ -94,10 +83,8 @@ class TrackingService {
     this.errorCounts.delete(parcelId);
   }
 
-  // Stop demo mode
+  // Stop demo with proper cleanup
   stopDemo(parcelId) {
-    console.log(`🛑 Stopping demo for parcel ${parcelId}`);
-    
     this.isDemoActive.set(parcelId, false);
 
     // Clear demo interval
@@ -109,7 +96,6 @@ class TrackingService {
 
     // Restart real tracking if it was active before demo
     if (this.isTracking.get(parcelId)) {
-      console.log(`🔄 Restarting real tracking for parcel ${parcelId}`);
       // Small delay to ensure clean state transition
       setTimeout(() => {
         if (this.isTracking.get(parcelId)) {
@@ -121,8 +107,6 @@ class TrackingService {
 
   // Fetch tracking data from API with rate limiting
   async fetchTrackingData(parcelId, onUpdate, onError) {
-    console.log(`📡 Fetching tracking data for parcel ${parcelId}`);
-    
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -145,7 +129,6 @@ class TrackingService {
         // Less aggressive backoff in presentation mode
         const baseDelay = this.presentationMode ? 5000 : 30000; // 5s vs 30s
         const backoffDelay = Math.min(baseDelay * Math.pow(2, errorCount), this.presentationMode ? 60000 : 300000);
-        console.log(`⚠️ Rate limited. Backing off for ${backoffDelay}ms (presentation mode: ${this.presentationMode})`);
         
         setTimeout(() => {
           if (this.isTracking.get(parcelId)) {
@@ -161,7 +144,6 @@ class TrackingService {
       }
 
       const data = await response.json();
-      console.log('✅ Tracking data received:', data);
       
       // Reset error count on success
       this.errorCounts.set(parcelId, 0);
@@ -172,15 +154,12 @@ class TrackingService {
         onUpdate(trackingData);
       }
     } catch (error) {
-      console.error('❌ Error fetching tracking data:', error);
-      
       // Handle rate limiting specifically
       if (error.message.includes('429')) {
         const errorCount = this.errorCounts.get(parcelId) || 0;
         this.errorCounts.set(parcelId, errorCount + 1);
         
         const backoffDelay = Math.min(30000 * Math.pow(2, errorCount), 300000);
-        console.log(`⚠️ Rate limited. Backing off for ${backoffDelay}ms`);
         
         setTimeout(() => {
           if (this.isTracking.get(parcelId)) {
@@ -209,8 +188,6 @@ class TrackingService {
 
   // Start demo mode
   startDemo(parcelId, onUpdate) {
-    console.log('🎬 Starting demo mode for real-time tracking');
-    
     // Stop any existing tracking and demo
     this.stopTracking(parcelId);
     this.stopDemo(parcelId);
@@ -237,7 +214,6 @@ class TrackingService {
     const demoInterval = setInterval(() => {
       if (updateIndex < demoUpdates.length) {
         const update = demoUpdates[updateIndex];
-        console.log(`🎬 Demo update ${updateIndex + 1}:`, update);
         
         // Update Redux store
         store.dispatch(updateParcelStatus({
@@ -268,10 +244,8 @@ class TrackingService {
       } else {
         clearInterval(demoInterval);
         this.demoIntervals.delete(parcelId);
-        this.isDemoActive.set(parcelId, false);
-        console.log('✅ Demo completed!');
       }
-    }, 5000); // Update every 5 seconds
+    }, 5000); // 5 seconds between updates
 
     this.demoIntervals.set(parcelId, demoInterval);
   }
@@ -294,8 +268,6 @@ class TrackingService {
 
   // Comprehensive cleanup for component unmount
   cleanup(parcelId) {
-    console.log(`🧹 Cleaning up tracking for parcel ${parcelId}`);
-    
     // Stop all tracking
     this.stopAllTracking(parcelId);
     
@@ -308,8 +280,6 @@ class TrackingService {
 
   // Cleanup all tracking (for app shutdown)
   cleanupAll() {
-    console.log('🧹 Cleaning up all tracking services');
-    
     // Stop all intervals
     for (const [parcelId, interval] of this.trackingIntervals) {
       clearInterval(interval);

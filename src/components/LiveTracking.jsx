@@ -57,8 +57,6 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
 
   // Handle tracking updates
   const handleTrackingUpdate = useCallback((data) => {
-    console.log('📡 Live tracking update received:', data);
-    
     setTrackingData(data);
     setLastUpdate(new Date().toISOString());
     setError(null);
@@ -94,7 +92,6 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
 
   // Handle tracking errors
   const handleTrackingError = useCallback((error) => {
-    console.error('❌ Live tracking error:', error);
     setError(error.message);
     toast.error('Failed to update tracking data', {
       position: "top-right",
@@ -106,7 +103,6 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
   const startTracking = useCallback(() => {
     if (!parcelId) return;
 
-    console.log('🚀 Starting live tracking for parcel:', parcelId);
     setIsTracking(true);
     setError(null);
     setIsDemoMode(false);
@@ -117,14 +113,12 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
   // Initialize tracking on mount
   useEffect(() => {
     if (parcelId && !isDemoMode) {
-      console.log(`🚀 Starting live tracking for parcel: ${parcelId}`);
       trackingService.startTracking(parcelId, handleTrackingUpdate, handleTrackingError);
     }
 
     // Cleanup function to stop tracking when component unmounts
     return () => {
       if (parcelId) {
-        console.log(`🧹 Cleaning up tracking for parcel: ${parcelId}`);
         trackingService.cleanup(parcelId);
       }
     };
@@ -147,7 +141,6 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
   const stopTracking = useCallback(() => {
     if (!parcelId) return;
 
-    console.log('🛑 Stopping live tracking for parcel:', parcelId);
     setIsTracking(false);
     setIsDemoMode(false);
     trackingService.stopAllTracking(parcelId);
@@ -181,48 +174,40 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     }
   }, [autoRefresh, startTracking, stopTracking]);
 
-  // Start demo mode
+  // Start demo
   const startDemo = useCallback(() => {
-    console.log('🎬 Starting demo mode');
-    setIsTracking(true);
+    if (!parcelId) return;
+
     setIsDemoMode(true);
+    setIsTracking(false);
     setError(null);
+
+    // Stop any existing tracking first
+    trackingService.stopAllTracking(parcelId);
     
     // Enable presentation mode for faster updates
     trackingService.enablePresentationMode();
     
-    // Stop any existing tracking first
-    trackingService.stopAllTracking(parcelId);
-    
-    // Start demo
-    trackingService.startDemo(parcelId, handleTrackingUpdate);
-    
-    toast.info('Demo mode started! Real parcel data is being updated throughout the system.', {
-      position: "top-right",
-      autoClose: 4000,
-    });
+    // Start demo with small delay
+    setTimeout(() => {
+      trackingService.startDemo(parcelId, handleTrackingUpdate);
+    }, 1000);
   }, [parcelId, handleTrackingUpdate]);
 
-  // Stop demo mode
+  // Stop demo
   const stopDemo = useCallback(() => {
-    console.log('🛑 Stopping demo mode');
+    if (!parcelId) return;
+
     setIsDemoMode(false);
     trackingService.stopDemo(parcelId);
-    
-    // Disable presentation mode
     trackingService.disablePresentationMode();
     
     // Restart real tracking if auto-refresh is enabled
     if (autoRefresh) {
       setTimeout(() => {
         startTracking();
-      }, 100);
+      }, 1000);
     }
-    
-    toast.info('Demo mode stopped. Parcel status changes are now permanent in the system.', {
-      position: "top-right",
-      autoClose: 3000,
-    });
   }, [parcelId, autoRefresh, startTracking]);
 
   const formatTimeRemaining = (estimatedDate) => {

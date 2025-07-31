@@ -109,50 +109,15 @@ const Parcels = () => {
   const [viewMode, setViewMode] = React.useState("grid");
 
   useEffect(() => {
-    console.log('🔄 Parcels component mounted');
-    console.log('👤 Current user:', user);
-    console.log('📦 Current parcels state:', parcelsState);
-    
     if (parcelsState.success) {
-      console.log('✅ Parcel creation was successful, not re-fetching');
       return;
     }
-    
-    console.log('📡 Fetching parcels from API...');
     dispatch(fetchParcels());
   }, [dispatch, parcelsState.success]);
 
-  // Log whenever parcels change
-  useEffect(() => {
-    console.log('📦 Parcels updated:', {
-      totalParcels: parcels?.length || 0,
-      parcels: parcels,
-      filteredCount: filteredList?.length || 0,
-      user: user
-    });
-  }, [parcels, filteredList, user]);
-
-  // Log filtered results
-  useEffect(() => {
-    console.log('🔍 Filtered parcels:', {
-      originalCount: parcels?.length || 0,
-      filteredCount: filteredList?.length || 0,
-      searchTerm: searchTerm,
-      statusFilter: statusFilter
-    });
-  }, [filteredList, searchTerm, statusFilter]);
-
-  // Debug logging
-  console.log('Parcels State:', parcelsState);
-  console.log('User:', user);
-  console.log('All Parcels:', parcels);
-  
   // Show all parcels for now (temporarily disable user filtering)
   const filteredList = parcels;
   const displayList = filteredList;
-  
-  console.log('Filtered Parcels:', filteredList);
-  console.log('Display List:', displayList);
 
   if (loading) return <p className="text-center mt-6">Loading parcels...</p>;
   if (error)
@@ -172,14 +137,7 @@ const Parcels = () => {
       parcel.destination_location_text?.toLowerCase().includes(term)
     );
     
-    console.log(`🔍 Searching "${term}" in parcel ${parcel.id}:`, matches);
     return matches;
-  });
-  
-  console.log('🔍 Search results:', {
-    searchTerm,
-    displayListLength: displayList.length,
-    searchFilteredLength: searchFiltered.length
   });
   
   // Sort based on selection
@@ -193,64 +151,23 @@ const Parcels = () => {
     }
     return 0;
   });
-  
-  console.log('📊 Final sorted list:', {
-    total: sortedList.length,
-    parcels: sortedList.map(p => ({ id: p.id, sender: p.sender_name, status: p.status }))
-  });
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Debug Section - Remove this later */}
-      <div className="bg-yellow-100 p-4 mb-4">
-        <h3 className="font-bold">Debug Info:</h3>
-        <p>Total parcels from API: {parcels?.length || 0}</p>
-        <p>Filtered parcels: {filteredList?.length || 0}</p>
-        <p>Display list: {displayList?.length || 0}</p>
-        <p>Search filtered: {searchFiltered?.length || 0}</p>
-        <p>Final sorted: {sortedList?.length || 0}</p>
-        <p>Search term: "{searchTerm}"</p>
-        <p>Sort by: "{sortBy}"</p>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">My Parcels</h1>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => navigate("/parcels/new")}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md font-medium transition"
+          >
+            Create New Parcel
+          </button>
+        </div>
       </div>
       
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-4 pt-8 max-w-6xl mx-auto gap-4">
-  <h2 className="text-2xl font-bold text-orange-600">My Parcels</h2>
-
-  <div className="flex flex-col md:flex-row items-center gap-4">
-    <input
-      type="text"
-      placeholder="Search parcels..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="border px-3 py-2 rounded-md shadow-sm"
-    />
-
-    <select
-      value={sortBy}
-      onChange={(e) => setSortBy(e.target.value)}
-      className="border px-3 py-2 rounded-md shadow-sm"
-    >
-      <option value="">Sort by...</option>
-      <option value="status">Status</option>
-      <option value="receipient">Receipient Name</option>
-      <option value="created_at">Date Created</option>
-    </select>
-    <button
-      onClick={() => setViewMode((prev) => (prev === "grid" ? "list" : "grid"))}
-      className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded hover:bg-gray-300 transition"
-    >
-      {viewMode === "grid" ? "Switch to List View" : "Switch to Grid View"}
-    </button>
-    <button
-      onClick={() => navigate("/parcels/new")}
-      className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition"
-    >
-      Create New Parcel
-    </button>
-  </div>
-</div>
       <div className="p-4 max-w-6xl mx-auto w-full">
   {sortedList.length === 0 ? (
     <p className="text-center text-gray-600">No parcels found.</p>
