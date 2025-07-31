@@ -10,6 +10,20 @@ import Navbar from '../components/Navbar';
 import { calculateMidpoint } from '../utils/distanceCalculator';
 import { fetchParcels } from '../redux/parcelSlice';
 
+// Tab component
+const Tab = ({ active, children, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors ${
+      active
+        ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-600'
+        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+    }`}
+  >
+    {children}
+  </button>
+);
+
 // SVG Icons
 const PackageIcon = () => (
   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -31,6 +45,7 @@ const TrackingPage = () => {
   const [mapZoom, setMapZoom] = useState(12);
   const [currentParcel, setCurrentParcel] = useState(parcel);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [activeTab, setActiveTab] = useState('tracking');
 
   // Fetch parcel if not found in store
   useEffect(() => {
@@ -198,20 +213,57 @@ const TrackingPage = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
-        {/* Main Content */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-          {/* Left Column - Live Tracking */}
-          <div className="xl:col-span-1 space-y-8">
-            <LiveTracking 
-              parcelId={parcelId} 
-              parcel={currentParcel}
-              onTrackingUpdate={handleTrackingUpdate}
-            />
-          </div>
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <Tab 
+              active={activeTab === 'tracking'} 
+              onClick={() => setActiveTab('tracking')}
+            >
+              📍 Live Tracking
+            </Tab>
+            <Tab 
+              active={activeTab === 'map'} 
+              onClick={() => setActiveTab('map')}
+            >
+              🗺️ Location Map
+            </Tab>
+            <Tab 
+              active={activeTab === 'progress'} 
+              onClick={() => setActiveTab('progress')}
+            >
+              📊 Journey Progress
+            </Tab>
+            <Tab 
+              active={activeTab === 'metrics'} 
+              onClick={() => setActiveTab('metrics')}
+            >
+              📈 Journey Metrics
+            </Tab>
+            <Tab 
+              active={activeTab === 'updates'} 
+              onClick={() => setActiveTab('updates')}
+            >
+              🔄 Real-time Updates
+            </Tab>
+          </nav>
+        </div>
 
-          {/* Right Column - Map and Metrics */}
-          <div className="xl:col-span-3 space-y-8">
-            {/* Map */}
+        {/* Tab Content */}
+        <div className="min-h-[600px]">
+          {/* Live Tracking Tab */}
+          {activeTab === 'tracking' && (
+            <div className="space-y-6">
+              <LiveTracking 
+                parcelId={parcelId} 
+                parcel={currentParcel}
+                onTrackingUpdate={handleTrackingUpdate}
+              />
+            </div>
+          )}
+
+          {/* Location Map Tab */}
+          {activeTab === 'map' && (
             <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
               <div className="p-6 border-b bg-gray-50">
                 <h3 className="text-xl font-semibold text-gray-900">Location Map</h3>
@@ -219,7 +271,7 @@ const TrackingPage = () => {
                   Real-time location tracking and route visualization
                 </p>
               </div>
-              <div className="h-[500px]">
+              <div className="h-[600px]">
                 <TrackingMap 
                   parcel={currentParcel}
                   center={mapCenter}
@@ -228,14 +280,24 @@ const TrackingPage = () => {
                 />
               </div>
             </div>
+          )}
 
-            {/* Progress and Metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Journey Progress Tab */}
+          {activeTab === 'progress' && (
+            <div className="space-y-6">
               <RouteProgress parcel={currentParcel} isDemoMode={isDemoMode} />
+            </div>
+          )}
+
+          {/* Journey Metrics Tab */}
+          {activeTab === 'metrics' && (
+            <div className="space-y-6">
               <JourneyMetrics parcel={currentParcel} isDemoMode={isDemoMode} />
             </div>
+          )}
 
-            {/* Real-time Updates */}
+          {/* Real-time Updates Tab */}
+          {activeTab === 'updates' && (
             <div className="bg-white rounded-xl shadow-lg border">
               <div className="p-6 border-b bg-gray-50">
                 <h3 className="text-xl font-semibold text-gray-900">Real-time Updates</h3>
@@ -247,7 +309,7 @@ const TrackingPage = () => {
                 <RealTimeTracking parcelId={parcelId} isDemoMode={isDemoMode} />
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Demo Mode Instructions */}

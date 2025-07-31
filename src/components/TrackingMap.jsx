@@ -60,16 +60,44 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
     if (!parcelData) return [];
 
     try {
-      const pickupCoords = parcelData.pickup_location_coordinates ? 
-        JSON.parse(parcelData.pickup_location_coordinates) : null;
-      const destinationCoords = parcelData.destination_location_coordinates ? 
-        JSON.parse(parcelData.destination_location_coordinates) : null;
+      // Try to get coordinates from different possible sources
+      let pickupCoords = null;
+      let destinationCoords = null;
 
-      if (!pickupCoords || !destinationCoords) return [];
+      // Try pickup_location_coordinates first
+      if (parcelData.pickup_location_coordinates) {
+        pickupCoords = JSON.parse(parcelData.pickup_location_coordinates);
+      }
+      // Fallback to individual lat/lng fields
+      else if (parcelData.pick_up_latitude && parcelData.pick_up_longitude) {
+        pickupCoords = {
+          lat: parseFloat(parcelData.pick_up_latitude),
+          lng: parseFloat(parcelData.pick_up_longitude)
+        };
+      }
+
+      // Try destination_location_coordinates first
+      if (parcelData.destination_location_coordinates) {
+        destinationCoords = JSON.parse(parcelData.destination_location_coordinates);
+      }
+      // Fallback to individual lat/lng fields
+      else if (parcelData.destination_latitude && parcelData.destination_longitude) {
+        destinationCoords = {
+          lat: parseFloat(parcelData.destination_latitude),
+          lng: parseFloat(parcelData.destination_longitude)
+        };
+      }
+
+      if (!pickupCoords || !destinationCoords) {
+        console.log('Missing coordinates:', { pickupCoords, destinationCoords });
+        return [];
+      }
+
+      console.log('Generating route path:', { pickupCoords, destinationCoords });
 
       // Create intermediate points for smoother route
       const points = [];
-      const steps = 10;
+      const steps = 20; // More points for smoother line
       
       for (let i = 0; i <= steps; i++) {
         const progress = i / steps;
@@ -78,6 +106,7 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
         points.push({ lat, lng });
       }
 
+      console.log('Generated route path with', points.length, 'points');
       return points;
     } catch (error) {
       console.error('Error generating route path:', error);
@@ -198,9 +227,19 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
 
   // Get coordinates from parcel
   const getPickupCoordinates = () => {
-    if (!parcel?.pickup_location_coordinates) return null;
     try {
-      return JSON.parse(parcel.pickup_location_coordinates);
+      // Try pickup_location_coordinates first
+      if (parcel?.pickup_location_coordinates) {
+        return JSON.parse(parcel.pickup_location_coordinates);
+      }
+      // Fallback to individual lat/lng fields
+      else if (parcel?.pick_up_latitude && parcel?.pick_up_longitude) {
+        return {
+          lat: parseFloat(parcel.pick_up_latitude),
+          lng: parseFloat(parcel.pick_up_longitude)
+        };
+      }
+      return null;
     } catch (error) {
       console.error('Error parsing pickup coordinates:', error);
       return null;
@@ -208,9 +247,19 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
   };
 
   const getDestinationCoordinates = () => {
-    if (!parcel?.destination_location_coordinates) return null;
     try {
-      return JSON.parse(parcel.destination_location_coordinates);
+      // Try destination_location_coordinates first
+      if (parcel?.destination_location_coordinates) {
+        return JSON.parse(parcel.destination_location_coordinates);
+      }
+      // Fallback to individual lat/lng fields
+      else if (parcel?.destination_latitude && parcel?.destination_longitude) {
+        return {
+          lat: parseFloat(parcel.destination_latitude),
+          lng: parseFloat(parcel.destination_longitude)
+        };
+      }
+      return null;
     } catch (error) {
       console.error('Error parsing destination coordinates:', error);
       return null;
@@ -273,15 +322,17 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
         )}
 
         {/* Current Position Marker */}
-        {/* Current position marker temporarily disabled */}
-        {/* {currentPosition && (
+        {isDemoMode && routePath.length > 1 && (
           <Marker
-            position={currentPosition}
+            position={routePath[Math.floor(routePath.length * 0.5)]} // Show at 50% progress
             icon={createMarkerIcon('blue', '🚚')}
             label="Current"
-            onClick={() => setSelectedMarker({ type: 'current', position: currentPosition })}
+            onClick={() => setSelectedMarker({ 
+              type: 'current', 
+              position: routePath[Math.floor(routePath.length * 0.5)] 
+            })}
           />
-        )} */}
+        )}
 
         {/* Route Path */}
         {routePath.length > 1 && (
@@ -289,8 +340,9 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
             path={routePath}
             options={{
               strokeColor: '#3B82F6',
-              strokeOpacity: 0.8,
-              strokeWeight: 3,
+              strokeOpacity: 1.0,
+              strokeWeight: 4,
+              geodesic: true,
             }}
           />
         )}
@@ -299,13 +351,18 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
         {routePath.length > 1 && (
           <Polyline
             path={routePath.filter((_, index) => {
-              // Placeholder for progress calculation
-              return index <= Math.floor(routePath.length * 0.5);
+              // Show progress based on demo mode or parcel status
+              const progress = isDemoMode ? 0.5 : 
+                parcel?.status === 'delivered' ? 1.0 :
+                parcel?.status === 'in_transit' ? 0.7 :
+                parcel?.status === 'pending' ? 0.2 : 0.1;
+              return index <= Math.floor(routePath.length * progress);
             })}
             options={{
               strokeColor: '#10B981',
-              strokeOpacity: 0.8,
-              strokeWeight: 4,
+              strokeOpacity: 1.0,
+              strokeWeight: 6,
+              geodesic: true,
             }}
           />
         )}
