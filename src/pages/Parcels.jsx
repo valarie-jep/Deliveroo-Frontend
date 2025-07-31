@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getParcels, cancelParcel,updateParcelDestination } from "../redux/parcelSlice";
+import { fetchParcels, cancelParcel,updateParcelDestination } from "../redux/parcelSlice";
 import Navbar from "../components/Navbar";
 
 
@@ -111,7 +111,7 @@ const Parcels = () => {
   const [viewMode, setViewMode] = React.useState("grid");
 
   useEffect(() => {
-    dispatch(getParcels());
+    dispatch(fetchParcels());
   }, [dispatch]);
 
   if (loading) return <p className="text-center mt-6">Loading parcels...</p>;

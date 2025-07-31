@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getParcels } from '../redux/parcelSlice';
+import { fetchParcels } from '../redux/parcelSlice';
 import TrackingStatus from './TrackingStatus';
 import { toast } from 'react-toastify';
 import store from '../redux/store';
@@ -56,7 +56,7 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
     try {
       setIsTracking(true);
       setLoading(true);
-      await dispatch(getParcels()).unwrap();
+      await dispatch(fetchParcels()).unwrap();
       setLastUpdate(new Date());
       
       const state = store.getState();

@@ -193,6 +193,9 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     setIsDemoMode(true);
     setError(null);
     
+    // Enable presentation mode for faster updates
+    trackingService.enablePresentationMode();
+    
     // Stop any existing tracking first
     trackingService.stopAllTracking(parcelId);
     
@@ -210,6 +213,9 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     console.log('🛑 Stopping demo mode');
     setIsDemoMode(false);
     trackingService.stopDemo(parcelId);
+    
+    // Disable presentation mode
+    trackingService.disablePresentationMode();
     
     // Restart real tracking if auto-refresh is enabled
     if (autoRefresh) {

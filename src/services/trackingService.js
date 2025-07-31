@@ -7,6 +7,20 @@ class TrackingService {
     this.demoIntervals = new Map();
     this.isTracking = new Map(); // Track if real tracking is active
     this.isDemoActive = new Map(); // Track if demo is active
+    this.errorCounts = new Map(); // Track error counts for backoff
+    this.presentationMode = false; // Flag for presentation mode
+  }
+
+  // Enable presentation mode (bypasses some rate limiting)
+  enablePresentationMode() {
+    this.presentationMode = true;
+    console.log('🎬 Presentation mode enabled - faster updates for demo');
+  }
+
+  // Disable presentation mode
+  disablePresentationMode() {
+    this.presentationMode = false;
+    console.log('📊 Presentation mode disabled - normal rate limiting');
   }
 
   // Start real-time tracking
@@ -24,16 +38,17 @@ class TrackingService {
     
     this.isTracking.set(parcelId, true);
     this.isDemoActive.set(parcelId, false);
+    this.errorCounts.set(parcelId, 0);
 
     // Initial fetch
     this.fetchTrackingData(parcelId, onUpdate, onError);
 
-    // Set up polling interval
+    // Set up polling interval with longer interval to prevent rate limiting
     const interval = setInterval(() => {
       if (this.isTracking.get(parcelId) && !this.isDemoActive.get(parcelId)) {
         this.fetchTrackingData(parcelId, onUpdate, onError);
       }
-    }, 30000); // Poll every 30 seconds
+    }, 30000); // Poll every 30 seconds for faster real-time updates
 
     this.trackingIntervals.set(parcelId, interval);
   }
@@ -64,7 +79,7 @@ class TrackingService {
     }
   }
 
-  // Fetch tracking data from API
+  // Fetch tracking data from API with rate limiting
   async fetchTrackingData(parcelId, onUpdate, onError) {
     console.log('📡 Fetching tracking data for parcel', parcelId);
     
@@ -82,6 +97,25 @@ class TrackingService {
         }
       });
 
+      if (response.status === 429) {
+        // Rate limited - implement exponential backoff
+        const errorCount = this.errorCounts.get(parcelId) || 0;
+        this.errorCounts.set(parcelId, errorCount + 1);
+        
+        // Less aggressive backoff in presentation mode
+        const baseDelay = this.presentationMode ? 5000 : 30000; // 5s vs 30s
+        const backoffDelay = Math.min(baseDelay * Math.pow(2, errorCount), this.presentationMode ? 60000 : 300000);
+        console.log(`⚠️ Rate limited. Backing off for ${backoffDelay}ms (presentation mode: ${this.presentationMode})`);
+        
+        setTimeout(() => {
+          if (this.isTracking.get(parcelId)) {
+            this.fetchTrackingData(parcelId, onUpdate, onError);
+          }
+        }, backoffDelay);
+        
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -89,21 +123,45 @@ class TrackingService {
       const data = await response.json();
       console.log('✅ Tracking data received:', data);
       
+      // Reset error count on success
+      this.errorCounts.set(parcelId, 0);
+      
       if (onUpdate) {
         onUpdate(data);
       }
     } catch (error) {
       console.error('❌ Error fetching tracking data:', error);
+      
+      // Handle rate limiting specifically
+      if (error.message.includes('429')) {
+        const errorCount = this.errorCounts.get(parcelId) || 0;
+        this.errorCounts.set(parcelId, errorCount + 1);
+        
+        const backoffDelay = Math.min(30000 * Math.pow(2, errorCount), 300000);
+        console.log(`⚠️ Rate limited. Backing off for ${backoffDelay}ms`);
+        
+        setTimeout(() => {
+          if (this.isTracking.get(parcelId)) {
+            this.fetchTrackingData(parcelId, onUpdate, onError);
+          }
+        }, backoffDelay);
+        
+        return;
+      }
+      
       if (onError) {
         onError(error);
       }
     }
   }
 
-  // Manual refresh
+  // Manual refresh with rate limiting
   async refreshTracking(parcelId) {
     return new Promise((resolve, reject) => {
-      this.fetchTrackingData(parcelId, resolve, reject);
+      // Add a small delay to prevent rapid successive calls
+      setTimeout(() => {
+        this.fetchTrackingData(parcelId, resolve, reject);
+      }, 1000);
     });
   }
 
