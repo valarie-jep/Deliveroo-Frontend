@@ -14,7 +14,7 @@ export const getParcels = createAsyncThunk(
   'parcels/getParcels',
   async (_, thunkAPI) => {
     try {
-      const res = await axios.get(`${BASE_URL}/parcels?per_page=100`, getAuthHeaders(thunkAPI));
+      const res = await axios.get(`${BASE_URL}/parcels`, getAuthHeaders(thunkAPI));
       return res.data;
     } catch (error) {
       const message = error?.response?.data?.message || 'Failed to load parcels';

@@ -149,6 +149,6 @@ const App = () => {
   );
 };
 
-console.log("Google Maps API Key:", process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
+
 
 export default App;
