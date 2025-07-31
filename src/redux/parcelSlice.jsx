@@ -88,6 +88,25 @@ export const cancelParcel = createAsyncThunk(
   }
 );
 
+export const updateParcelDestination = createAsyncThunk(
+  'parcels/updateParcelDestination',
+  async ({ id, newDestination }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${BASE_URL}/parcels/${id}`, {
+        destination_location_text: newDestination
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Failed to update parcel destination');
+    }
+  }
+);
+
 const parcelSlice = createSlice({
   name: 'parcels',
   initialState: {
