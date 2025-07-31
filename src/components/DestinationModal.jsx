@@ -1,28 +1,28 @@
 // components/DestinationModal.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { LoadScript } from "@react-google-maps/api"; // Make sure to import LoadScript
-import LocationAutocomplete from "./LocationAutocomplete"; // Your custom autocomplete component
+import { LoadScript } from "@react-google-maps/api"; 
+import LocationAutocomplete from "./LocationAutocomplete";
 
-// Define the libraries needed for Google Maps Autocomplete
+
 const libraries = ["places"];
 
 const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) => {
-  // State for the text input of the new destination
+  
   const [destinationText, setDestinationText] = useState(currentDestination || '');
-  // State for the coordinates of the selected destination
-  const [destinationCoords, setDestinationCoords] = useState(null); // { lat: ..., lng: ... }
+  
+  const [destinationCoords, setDestinationCoords] = useState(null); 
   const modalRef = useRef(null);
 
-  // Effect to reset input when modal opens or currentDestination changes
+ 
   useEffect(() => {
     if (isOpen) {
       setDestinationText(currentDestination || '');
-      // Reset coords when modal opens, unless you have existing coords to pass
+      
       setDestinationCoords(null);
     }
   }, [isOpen, currentDestination]);
 
-  // Effect to handle click outside to close modal
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -43,10 +43,9 @@ const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) =>
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Only confirm if destination text is not empty
-    // You might want to also ensure destinationCoords is not null if coordinates are mandatory
+    
     if (destinationText.trim()) {
-      // Pass both text and coordinates to the parent's onConfirm function
+      
       onConfirm({
         newDestinationText: destinationText,
         newDestinationCoords: destinationCoords
@@ -58,9 +57,9 @@ const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) =>
   if (!isOpen) return null;
 
   return (
-    // Wrap the modal content with LoadScript to enable Google Maps services
+    
     <LoadScript
-      googleMapsApiKey={process.env.REACT_APP_Maps_API_KEY} // Make sure this env variable is set
+      googleMapsApiKey={process.env.REACT_APP_Maps_API_KEY} 
       libraries={libraries}
     >
       <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
@@ -71,18 +70,18 @@ const DestinationModal = ({ isOpen, onClose, onConfirm, currentDestination }) =>
               <label htmlFor="destinationAutocomplete" className="block text-gray-700 text-sm font-bold mb-2">
                 New Destination:
               </label>
-              {/* Correctly bind LocationAutocomplete to local state */}
+              
               <LocationAutocomplete
                 value={destinationText}
-                onChange={setDestinationText} // This updates the text input
+                onChange={setDestinationText} 
                 onLocationSelect={(place) => {
-                  // This updates coordinates when a place is selected from suggestions
+                  
                   setDestinationCoords(
                     place.lat && place.lng
                       ? { lat: place.lat, lng: place.lng }
                       : null
                   );
-                  setDestinationText(place.address); // Update text with the selected place's address
+                  setDestinationText(place.address); 
                 }}
                 placeholder="Start typing to search locations..."
                 className="w-full border rounded px-3 py-2"
