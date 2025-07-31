@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import TrackingMap from '../components/TrackingMap';
 import RealTimeTracking from '../components/RealTimeTracking';
 import RouteProgress from '../components/RouteProgress';
 import JourneyMetrics from '../components/JourneyMetrics';
 import LiveTracking from '../components/LiveTracking';
-import { calculateMidpoint, calculateProgressPercentage, calculateEstimatedArrival } from '../utils/distanceCalculator';
+import { calculateMidpoint } from '../utils/distanceCalculator';
+import { fetchParcels } from '../redux/parcelSlice';
 
 // SVG Icons
 const PackageIcon = () => (
@@ -17,14 +18,30 @@ const PackageIcon = () => (
 
 const TrackingPage = () => {
   const { parcelId } = useParams();
+  const dispatch = useDispatch();
+  
+  // Debug logging
+  console.log('🔍 TrackingPage - ParcelId from URL:', parcelId);
+  console.log('🔍 TrackingPage - All parcels in store:', useSelector(state => state.parcels.parcels));
+  
   const parcel = useSelector(state => 
     state.parcels.parcels.find(p => p.id === parseInt(parcelId))
   );
+  
+  console.log('🔍 TrackingPage - Found parcel:', parcel);
 
   const [mapCenter, setMapCenter] = useState(null);
   const [mapZoom, setMapZoom] = useState(12);
   const [currentParcel, setCurrentParcel] = useState(parcel);
   const [isDemoMode, setIsDemoMode] = useState(false);
+
+  // Fetch parcel if not found in store
+  useEffect(() => {
+    if (!parcel && parcelId) {
+      console.log('🔍 Parcel not found in store, fetching parcels...');
+      dispatch(fetchParcels());
+    }
+  }, [parcel, parcelId, dispatch]);
 
   // Update map view based on parcel coordinates
   const updateMapView = useCallback((parcelData) => {
@@ -116,6 +133,17 @@ const TrackingPage = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Parcel Not Found</h2>
           <p className="text-gray-600">The parcel you're looking for doesn't exist.</p>
+          <div className="mt-4">
+            <button 
+              onClick={() => dispatch(fetchParcels())}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Refresh Parcels
+            </button>
+          </div>
+          <div className="mt-2 text-sm text-gray-500">
+            Parcel ID: {parcelId}
+          </div>
         </div>
       </div>
     );

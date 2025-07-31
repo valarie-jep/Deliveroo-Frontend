@@ -184,7 +184,6 @@ const RouteProgress = ({ parcel, isDemoMode = false }) => {
           {steps.map((step, index) => {
             const isCompleted = index < currentStepIndex;
             const isCurrent = index === currentStepIndex;
-            const isPending = index > currentStepIndex;
             
             return (
               <div 

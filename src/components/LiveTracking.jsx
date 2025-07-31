@@ -46,12 +46,6 @@ const ClockIcon = () => (
   </svg>
 );
 
-const LocationIcon = () => (
-  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-  </svg>
-);
-
 const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
   const [trackingData, setTrackingData] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
@@ -109,6 +103,18 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
     });
   }, []);
 
+  // Start tracking
+  const startTracking = useCallback(() => {
+    if (!parcelId) return;
+
+    console.log('🚀 Starting live tracking for parcel:', parcelId);
+    setIsTracking(true);
+    setError(null);
+    setIsDemoMode(false);
+
+    trackingService.startTracking(parcelId, handleTrackingUpdate, handleTrackingError);
+  }, [parcelId, handleTrackingUpdate, handleTrackingError]);
+
   // Initialize tracking on mount
   useEffect(() => {
     if (parcelId && autoRefresh && !isDemoMode) {
@@ -135,18 +141,6 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
       });
     }
   }, [parcel]);
-
-  // Start tracking
-  const startTracking = useCallback(() => {
-    if (!parcelId) return;
-
-    console.log('🚀 Starting live tracking for parcel:', parcelId);
-    setIsTracking(true);
-    setError(null);
-    setIsDemoMode(false);
-
-    trackingService.startTracking(parcelId, handleTrackingUpdate, handleTrackingError);
-  }, [parcelId, handleTrackingUpdate, handleTrackingError]);
 
   // Stop tracking
   const stopTracking = useCallback(() => {

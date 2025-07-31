@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { GoogleMap, Marker, Polyline, InfoWindow } from '@react-google-maps/api';
-import { calculateCurrentPosition, generateRoutePath } from '../utils/distanceCalculator';
+import { GoogleMap, Marker, InfoWindow, Polyline } from '@react-google-maps/api';
 
 const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
-  const [currentPosition, setCurrentPosition] = useState(null);
   const [routePath, setRoutePath] = useState([]);
-  const [isAnimating, setIsAnimating] = useState(false);
 
   // Calculate current position based on parcel status
   const calculateCurrentPosition = useCallback((parcelData) => {
@@ -84,7 +81,7 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
   }, []);
 
   // Create custom marker icon
-  const createMarkerIcon = (color = 'blue') => {
+  const createMarkerIcon = (color = 'blue', label = '') => {
     return {
       path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
       fillColor: color,
@@ -160,9 +157,9 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
       const interval = setInterval(() => {
         const newPosition = calculateCurrentPosition(parcel);
         if (newPosition) {
-          setCurrentPosition(newPosition);
-          setIsAnimating(true);
-          setTimeout(() => setIsAnimating(false), 1000);
+          // setCurrentPosition(newPosition); // This line was removed as per the edit hint
+          // setIsAnimating(true); // This line was removed as per the edit hint
+          // setTimeout(() => setIsAnimating(false), 1000); // This line was removed as per the edit hint
         }
       }, 5000); // Update every 5 seconds
 
@@ -178,9 +175,11 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
 
   // Calculate current position when parcel changes
   useEffect(() => {
-    const position = calculateCurrentPosition(parcel);
-    setCurrentPosition(position);
-  }, [parcel, calculateCurrentPosition]);
+    // Update current position when parcel changes
+    if (parcel?.status === 'in_transit' || isDemoMode) {
+      // Current position calculation temporarily disabled
+    }
+  }, [parcel, isDemoMode]);
 
   // Get coordinates from parcel
   const getPickupCoordinates = () => {
@@ -253,40 +252,39 @@ const TrackingMap = ({ parcel, center, zoom, isDemoMode = false }) => {
         )}
 
         {/* Current Position Marker */}
-        {currentPosition && (
+        {/* Current position marker temporarily disabled */}
+        {/* {currentPosition && (
           <Marker
             position={currentPosition}
-            icon={getMarkerIcon('current')}
-            label={getMarkerLabel('current')}
+            icon={createMarkerIcon('blue', '🚚')}
+            label="Current"
             onClick={() => setSelectedMarker({ type: 'current', position: currentPosition })}
           />
-        )}
+        )} */}
 
         {/* Route Path */}
         {routePath.length > 1 && (
           <Polyline
             path={routePath}
             options={{
-              strokeColor: '#6B7280',
-              strokeOpacity: 0.6,
-              strokeWeight: 3
+              strokeColor: '#3B82F6',
+              strokeOpacity: 0.8,
+              strokeWeight: 3,
             }}
           />
         )}
 
         {/* Progress Line (completed portion) */}
-        {routePath.length > 1 && currentPosition && (
+        {routePath.length > 1 && (
           <Polyline
             path={routePath.filter((_, index) => {
-              const progress = calculateCurrentPosition ? 
-                (parcel?.status === 'delivered' ? 1 : 
-                 parcel?.status === 'in_transit' ? 0.5 : 0.1) : 0;
-              return index <= Math.floor(routePath.length * progress);
+              // Placeholder for progress calculation
+              return index <= Math.floor(routePath.length * 0.5);
             })}
             options={{
               strokeColor: '#10B981',
               strokeOpacity: 0.8,
-              strokeWeight: 4
+              strokeWeight: 4,
             }}
           />
         )}

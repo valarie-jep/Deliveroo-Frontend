@@ -116,9 +116,6 @@ export const calculateEstimatedArrival = (parcel) => {
   if (!parcel || parcel.status === 'delivered') return null;
   
   const now = new Date();
-  const createdDate = new Date(parcel.created_at);
-  const timeDiff = now - createdDate;
-  const hoursElapsed = timeDiff / (1000 * 60 * 60);
   
   let estimatedHours = 48; // Default 48 hours
   

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchParcels } from '../redux/parcelSlice';
 import TrackingStatus from './TrackingStatus';
 import { toast } from 'react-toastify';
-import store from '../redux/store';
 
 const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 30000 }) => {
   const dispatch = useDispatch();
@@ -11,20 +10,16 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
   const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [trackingHistory, setTrackingHistory] = useState([]);
   const [estimatedArrival, setEstimatedArrival] = useState(null);
   
   const parcel = useSelector((state) => 
-    state.parcels.list.find(p => String(p.id) === String(parcelId))
+    state.parcels.parcels.find(p => String(p.id) === String(parcelId))
   );
 
   const calculateEstimatedArrival = useCallback((parcel) => {
     if (!parcel || parcel.status === 'delivered') return null;
     
     const now = new Date();
-    const createdDate = new Date(parcel.created_at);
-    const timeDiff = now - createdDate;
-    const hoursElapsed = timeDiff / (1000 * 60 * 60);
     
     let estimatedHours = 48; // Default 48 hours
     
@@ -38,78 +33,58 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
     return estimatedDate;
   }, []);
 
-  const addTrackingEvent = useCallback((status, message) => {
-    const event = {
-      id: Date.now(),
-      timestamp: new Date(),
-      status,
-      message,
-      type: 'status_update'
-    };
-    
-    setTrackingHistory(prev => [event, ...prev.slice(0, 9)]); // Keep last 10 events
-  }, []);
-
-  const fetchParcelData = useCallback(async () => {
+  const handleRefresh = useCallback(async () => {
     if (!parcelId) return;
     
     try {
       setIsTracking(true);
       setLoading(true);
+      setError(null);
       await dispatch(fetchParcels()).unwrap();
       setLastUpdate(new Date());
       
-      const state = store.getState();
-      const updatedParcel = state.parcels.list.find(p => String(p.id) === String(parcelId));
-      
-      if (updatedParcel && updatedParcel.status) {
-        const currentStatus = updatedParcel.status;
-        const statusMessage = currentStatus.replace('_', ' ').toUpperCase();
-        
-        // Add tracking event
-        addTrackingEvent(currentStatus, `Parcel status updated to ${statusMessage}`);
-        
-        // Show toast notification
-        toast.info(`Parcel ${parcelId} status: ${statusMessage}`, {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        
-        // Update estimated arrival
-        setEstimatedArrival(calculateEstimatedArrival(updatedParcel));
-      }
+      toast.success('Tracking data refreshed!', {
+        position: "top-right",
+        autoClose: 2000,
+      });
     } catch (error) {
-      console.error('Failed to refresh parcel data:', error);
-      setError('Failed to refresh parcel data');
-      addTrackingEvent('error', 'Failed to refresh tracking data');
+      console.error('Failed to refresh tracking:', error);
+      setError('Failed to refresh tracking data');
+      toast.error('Failed to refresh tracking data', {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } finally {
       setIsTracking(false);
       setLoading(false);
     }
-  }, [dispatch, parcelId, addTrackingEvent, calculateEstimatedArrival]);
+  }, [dispatch, parcelId]);
 
   useEffect(() => {
-    fetchParcelData();
-  }, [fetchParcelData]);
+    if (parcelId) {
+      handleRefresh();
+    }
+  }, [parcelId, handleRefresh]);
 
   useEffect(() => {
     if (!autoRefresh || !parcelId) return;
 
     const interval = setInterval(() => {
-      fetchParcelData();
+      handleRefresh();
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, fetchParcelData]);
+  }, [autoRefresh, refreshInterval, handleRefresh]);
 
   useEffect(() => {
     if (parcel) {
       setEstimatedArrival(calculateEstimatedArrival(parcel));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parcel, calculateEstimatedArrival]);
 
   const handleManualRefresh = () => {
-    fetchParcelData();
+    handleRefresh();
   };
 
   const formatTimeRemaining = (estimatedDate) => {
@@ -271,22 +246,9 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
       )}
 
       {/* Tracking History */}
-      {trackingHistory.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">Recent Updates</h4>
-          <div className="space-y-2 max-h-32 overflow-y-auto">
-            {trackingHistory.map((event) => (
-              <div key={event.id} className="flex items-center space-x-2 text-xs">
-                <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                <span className="text-gray-500">
-                  {event.timestamp.toLocaleTimeString()}
-                </span>
-                <span className="text-gray-700">{event.message}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* The trackingHistory state was removed, so this section is no longer relevant. */}
+      {/* If history is needed, it should be managed in the Redux store or passed as a prop. */}
+      {/* For now, removing the section as per the edit hint. */}
 
       {/* Delivery Confirmation */}
       {parcel.status === 'delivered' && (
