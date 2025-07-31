@@ -5,6 +5,7 @@ import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api"
 import Navbar from "../components/Navbar";
 import RealTimeTracking from "../components/RealTimeTracking";
 import RouteProgress from "../components/RouteProgress";
+import JourneyMetrics from "../components/JourneyMetrics";
 
 const GOOGLE_MAPS_LIBRARIES = ["places"];
 
@@ -188,6 +189,7 @@ const TrackingPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Tracking Information */}
             <div>
+              <JourneyMetrics parcel={parcel} />
               <RouteProgress parcel={parcel} />
               <RealTimeTracking parcelId={parcel.id} />
             </div>
