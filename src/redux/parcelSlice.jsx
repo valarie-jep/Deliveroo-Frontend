@@ -48,7 +48,7 @@ export const updateParcelDestination = createAsyncThunk(
     try {
       const res = await axios.patch(
         `${BASE_URL}/parcels/${parcelId}/destination`,
-        { destination: newDestination },
+        { destination_location_text: newDestination },
         getAuthHeaders(thunkAPI)
       );
       return res.data;
