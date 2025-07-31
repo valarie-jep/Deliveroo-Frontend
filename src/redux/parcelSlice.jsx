@@ -3,22 +3,32 @@ import axios from 'axios';
 import { notify } from '../utils/toast';
 import emailService from '../services/emailService';
 
-const BASE_URL = process.env.REACT_APP_API_URL || '';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
 
 const getAuthHeaders = (thunkAPI) => {
   const token = thunkAPI.getState().auth.token;
   return { headers: { Authorization: `Bearer ${token}` } };
 };
 
+const getErrMessage = (error, fallback) =>
+  error?.response?.data?.message ||
+  error?.response?.data?.error ||
+  error?.message ||
+  fallback;
+
+/* ===================== THUNKS ===================== */
+
 export const getParcels = createAsyncThunk(
   'parcels/getParcels',
   async (_, thunkAPI) => {
     try {
-      const res = await axios.get(`${BASE_URL}/parcels?per_page=100`, getAuthHeaders(thunkAPI));
+      const res = await axios.get(
+        `${BASE_URL}/parcels?per_page=100`,
+        getAuthHeaders(thunkAPI)
+      );
       return res.data;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to load parcels';
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(getErrMessage(error, 'Failed to load parcels'));
     }
   }
 );
@@ -27,40 +37,46 @@ export const createParcel = createAsyncThunk(
   'parcels/createParcel',
   async (parcelData, thunkAPI) => {
     try {
-      const res = await axios.post(`${BASE_URL}/parcels`, parcelData, getAuthHeaders(thunkAPI));
+      const res = await axios.post(
+        `${BASE_URL}/parcels`,
+        parcelData,
+        getAuthHeaders(thunkAPI)
+      );
       const createdParcel = res.data;
 
-      // non-blocking email notification
+      // Non-blocking email notification
       try {
         const user = thunkAPI.getState().auth.user;
         if (user && user.email) {
           await emailService.sendParcelCreatedEmail(createdParcel, user.email);
         }
       } catch (emailErr) {
+        // Don't block the main flow
         console.error('Failed to send parcel created email:', emailErr);
       }
 
       return createdParcel;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to create parcel';
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(getErrMessage(error, 'Failed to create parcel'));
     }
   }
 );
 
 export const updateParcelDestination = createAsyncThunk(
   'parcels/updateParcelDestination',
-  async ({ parcelId, newDestination }, thunkAPI) => {
+  // Accept either { parcelId, newDestination } or { id, newDestination }
+  async (payload, thunkAPI) => {
+    const { parcelId, id, newDestination } = payload || {};
+    const pid = parcelId ?? id;
     try {
       const res = await axios.patch(
-        `${BASE_URL}/parcels/${parcelId}/destination`,
-        { destination: newDestination },
+        `${BASE_URL}/parcels/${pid}/destination`,
+        { destination_location_text: newDestination }, // <-- aligned with backend
         getAuthHeaders(thunkAPI)
       );
       return res.data;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update destination';
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(getErrMessage(error, 'Failed to update destination'));
     }
   }
 );
@@ -76,7 +92,7 @@ export const cancelParcel = createAsyncThunk(
       );
       const cancelledParcel = res.data;
 
-      // non-blocking email notification
+      // Non-blocking email notification
       try {
         const user = thunkAPI.getState().auth.user;
         if (user && user.email) {
@@ -88,8 +104,7 @@ export const cancelParcel = createAsyncThunk(
 
       return cancelledParcel;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to cancel parcel';
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(getErrMessage(error, 'Failed to cancel parcel'));
     }
   }
 );
@@ -105,12 +120,12 @@ export const updateParcelStatus = createAsyncThunk(
       );
       const updatedParcel = res.data;
 
-      // non-blocking email notifications
+      // Non-blocking email notifications
       try {
         const state = thunkAPI.getState();
         const user = state.auth.user;
         if (user && user.email) {
-          const oldStatus = state.parcels.list.find(p => p.id === parcelId)?.status;
+          const oldStatus = state.parcels.list.find((p) => p.id === parcelId)?.status;
           await emailService.sendStatusUpdateEmail(parcelId, user.email, oldStatus, status);
 
           if (status === 'delivered') {
@@ -123,8 +138,7 @@ export const updateParcelStatus = createAsyncThunk(
 
       return updatedParcel;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update status';
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(getErrMessage(error, 'Failed to update status'));
     }
   }
 );
@@ -140,7 +154,7 @@ export const updateParcelLocation = createAsyncThunk(
       );
       const updatedParcel = res.data;
 
-      // non-blocking email notification
+      // Non-blocking email notification
       try {
         const user = thunkAPI.getState().auth.user;
         if (user && user.email) {
@@ -152,27 +166,28 @@ export const updateParcelLocation = createAsyncThunk(
 
       return updatedParcel;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update location';
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(getErrMessage(error, 'Failed to update location'));
     }
   }
 );
 
-// Fetch a single parcel by ID
+// Admin endpoint (kept as-is)
 export const getParcelById = createAsyncThunk(
   'parcels/getParcelById',
   async (parcelId, thunkAPI) => {
     try {
-      const res = await axios.get(`${BASE_URL}/admin/parcels/${parcelId}`, getAuthHeaders(thunkAPI));
+      const res = await axios.get(
+        `${BASE_URL}/admin/parcels/${parcelId}`,
+        getAuthHeaders(thunkAPI)
+      );
       return res.data;
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to fetch parcel details';
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(getErrMessage(error, 'Failed to fetch parcel details'));
     }
   }
 );
 
-// ------------------ SLICE ------------------
+/* ===================== SLICE ===================== */
 
 const parcelSlice = createSlice({
   name: 'parcels',
@@ -193,7 +208,6 @@ const parcelSlice = createSlice({
       .addCase(getParcels.fulfilled, (state, action) => {
         state.list = action.payload?.parcels || [];
         state.loading = false;
-        // Keep success silent to avoid noise; users will see content update.
       })
       .addCase(getParcels.rejected, (state, action) => {
         state.error = action.payload || action.error?.message || 'Failed to load parcels';
@@ -301,5 +315,3 @@ const parcelSlice = createSlice({
 });
 
 export default parcelSlice.reducer;
-
-

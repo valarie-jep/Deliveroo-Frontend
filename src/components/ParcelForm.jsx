@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { createParcel } from '../redux/parcelSlice';
 import LocationAutocomplete from './LocationAutocomplete';
@@ -19,7 +19,7 @@ const ParcelForm = ({ setSuccess }) => {
   const [error, setError] = useState(null);
   const loading = useSelector((state) => state.parcels.loading);
   const user = useSelector((state) => state.auth.user);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
 
   const validateInputs = () => {
     const phoneRegex = /^\d{10,15}$/; // Adjust as needed
@@ -48,7 +48,7 @@ const ParcelForm = ({ setSuccess }) => {
     return null; // valid
   };
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (setSuccess) setSuccess(null);
@@ -82,7 +82,7 @@ const ParcelForm = ({ setSuccess }) => {
       if (setSuccess) setSuccess('Parcel created successfully!');
       toast.success("Parcel created successfully!");
 
-      
+
       setTimeout(() => navigate('/parcels'), 300);
       setPickup('');
       setDestination('');
@@ -95,15 +95,15 @@ const ParcelForm = ({ setSuccess }) => {
     } catch (err) {
       setError(err?.message || err?.error || 'Failed to create parcel.');
     }
-};
+  };
 
 
   return (
     <div className="w-full max-w-md">
-      <form  className="space-y-4">
+      <form className="space-y-4">
         <p className="text-xs text-gray-500 mt-1">
-            All fields are Required*
-          </p>
+          All fields are Required*
+        </p>
         <div>
           <label className="block font-medium mb-1">Pickup Location</label>
           <LocationAutocomplete
@@ -156,17 +156,17 @@ const ParcelForm = ({ setSuccess }) => {
             <input type="text" value={recipientPhone} onChange={e => setRecipientPhone(e.target.value)} className="w-full border rounded px-3 py-2" />
           </div>
         </div>
-        <button type="button"  
-        onClick={handleSubmit} disabled={loading} className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600 transition">
+        <button type="button"
+          onClick={handleSubmit} disabled={loading} className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600 transition">
           {loading ? 'Creating...' : 'Create Parcel'}
         </button>
 
-        <button 
-            onClick={() => navigate('/parcels')} 
-            className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
-          >
-            Back to My Parcels
-          </button>
+        <button
+          onClick={() => navigate('/parcels')}
+          className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
+        >
+          Back to My Parcels
+        </button>
         {error && <div className="text-red-600 mt-2 text-center">{error}</div>}
       </form>
     </div>
