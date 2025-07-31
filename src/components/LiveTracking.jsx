@@ -284,7 +284,14 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
           </div>
           {lastUpdate && (
             <span className="text-xs text-gray-500">
-              Last update: {lastUpdate.toLocaleTimeString()}
+              Last update: {(() => {
+                try {
+                  const date = new Date(lastUpdate);
+                  return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleTimeString();
+                } catch (error) {
+                  return 'Invalid date';
+                }
+              })()}
             </span>
           )}
         </div>
@@ -394,7 +401,21 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
                 </span>
               </div>
               <p className="text-xs text-blue-600 mt-1">
-                Expected by {new Date(trackingData.estimated_delivery).toLocaleDateString()} at {new Date(trackingData.estimated_delivery).toLocaleTimeString()}
+                Expected by {(() => {
+                  try {
+                    const date = new Date(trackingData.estimated_delivery);
+                    return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+                  } catch (error) {
+                    return 'Invalid date';
+                  }
+                })()} at {(() => {
+                  try {
+                    const date = new Date(trackingData.estimated_delivery);
+                    return isNaN(date.getTime()) ? 'Invalid time' : date.toLocaleTimeString();
+                  } catch (error) {
+                    return 'Invalid time';
+                  }
+                })()}
               </p>
             </div>
           )}
@@ -402,7 +423,14 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
           {/* Last Updated */}
           {trackingData.last_updated && (
             <div className="text-xs text-gray-500">
-              Last updated: {new Date(trackingData.last_updated).toLocaleString()}
+              Last updated: {(() => {
+                try {
+                  const date = new Date(trackingData.last_updated);
+                  return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleString();
+                } catch (error) {
+                  return 'Invalid date';
+                }
+              })()}
             </div>
           )}
         </div>
@@ -417,7 +445,14 @@ const LiveTracking = ({ parcelId, parcel, onTrackingUpdate }) => {
               <div key={update.id} className="flex items-center space-x-2 text-xs p-2 bg-gray-50 rounded">
                 <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                 <span className="text-gray-500">
-                  {update.timestamp.toLocaleTimeString()}
+                  {(() => {
+                    try {
+                      const date = new Date(update.timestamp);
+                      return isNaN(date.getTime()) ? 'Invalid time' : date.toLocaleTimeString();
+                    } catch (error) {
+                      return 'Invalid time';
+                    }
+                  })()}
                 </span>
                 <span className="text-gray-700">{update.message}</span>
                 {update.location && (
