@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { trackParcel } from '../redux/parcelSlice';
+import { getParcels } from '../redux/parcelSlice';
 import TrackingStatus from './TrackingStatus';
 import { toast } from 'react-toastify';
 
@@ -8,46 +8,45 @@ const RealTimeTracking = ({ parcelId, autoRefresh = true, refreshInterval = 3000
   const dispatch = useDispatch();
   const [isTracking, setIsTracking] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   
-  const parcels = useSelector((state) => state.parcels.list);
-  const loading = useSelector((state) => state.parcels.loading);
-  const error = useSelector((state) => state.parcels.error);
-  
-  const parcel = parcels.find(p => p.id === parseInt(parcelId));
+  const parcel = useSelector((state) => 
+    state.parcels.list.find(p => String(p.id) === String(parcelId))
+  );
 
   const fetchParcelData = useCallback(async () => {
     if (!parcelId) return;
     
     try {
       setIsTracking(true);
-      const result = await dispatch(trackParcel(parcelId)).unwrap();
+      setLoading(true);
+      await dispatch(getParcels()).unwrap();
       setLastUpdate(new Date());
       
-      // Show toast for status changes
-      if (result && result.status) {
-        const currentStatus = result.status;
+      const state = dispatch.getState();
+      const updatedParcel = state.parcels.list.find(p => String(p.id) === String(parcelId));
+      
+      if (updatedParcel && updatedParcel.status) {
+        const currentStatus = updatedParcel.status;
         toast.info(`Parcel ${parcelId} status: ${currentStatus.replace('_', ' ').toUpperCase()}`, {
           position: "top-right",
           autoClose: 3000,
         });
       }
     } catch (error) {
-      console.error('Failed to track parcel:', error);
-      // Don't show error toast for parcel not found - it's expected
-      if (!error.includes('Parcel not found')) {
-        toast.error(`Failed to track parcel: ${error}`);
-      }
+      console.error('Failed to refresh parcel data:', error);
+      setError('Failed to refresh parcel data');
     } finally {
       setIsTracking(false);
+      setLoading(false);
     }
   }, [dispatch, parcelId]);
 
-  // Initial fetch
   useEffect(() => {
     fetchParcelData();
   }, [fetchParcelData]);
 
-  // Auto-refresh setup
   useEffect(() => {
     if (!autoRefresh || !parcelId) return;
 

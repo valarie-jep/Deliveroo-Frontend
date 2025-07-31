@@ -5,7 +5,6 @@ import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import Navbar from "../components/Navbar";
 import RealTimeTracking from "../components/RealTimeTracking";
 
-// Static libraries array to prevent LoadScript reloading
 const GOOGLE_MAPS_LIBRARIES = ["places"];
 
 const containerStyle = {
@@ -77,7 +76,6 @@ const TrackingPage = () => {
       return center;
     }
     
-    // Try to get coordinates from parcel data
     if (parcel.pick_up_latitude && parcel.pick_up_longitude) {
       return { 
         lat: parseFloat(parcel.pick_up_latitude), 
@@ -92,7 +90,6 @@ const TrackingPage = () => {
       };
     }
     
-    // If no coordinates, use default center
     console.warn("No coordinates found for parcel, using default center");
     return center;
   };

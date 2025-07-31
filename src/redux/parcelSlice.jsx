@@ -37,7 +37,6 @@ export const createParcel = createAsyncThunk(
       const res = await axios.post(`${BASE_URL}/parcels`, parcelData, getAuthHeaders(thunkAPI));
       const createdParcel = res.data;
 
-      // non-blocking email notification
       try {
         const user = thunkAPI.getState().auth.user;
         if (user && user.email) {
@@ -61,7 +60,6 @@ export const createParcel = createAsyncThunk(
         }
       });
       
-      // Try to get more detailed error information
       let errorMessage = 'Failed to create parcel';
       if (error?.response?.status === 500) {
         errorMessage = 'Backend server error. Please try again later or contact support.';
@@ -106,7 +104,6 @@ export const cancelParcel = createAsyncThunk(
       );
       const cancelledParcel = res.data;
 
-      // non-blocking email notification
       try {
         const user = thunkAPI.getState().auth.user;
         if (user && user.email) {
@@ -135,7 +132,6 @@ export const updateParcelStatus = createAsyncThunk(
       );
       const updatedParcel = res.data;
 
-      // non-blocking email notifications
       try {
         const state = thunkAPI.getState();
         const user = state.auth.user;
@@ -170,7 +166,6 @@ export const updateParcelLocation = createAsyncThunk(
       );
       const updatedParcel = res.data;
 
-      // non-blocking email notification
       try {
         const user = thunkAPI.getState().auth.user;
         if (user && user.email) {
