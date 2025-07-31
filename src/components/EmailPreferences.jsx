@@ -20,10 +20,26 @@ const EmailPreferences = () => {
     try {
       setLoading(true);
       const userPreferences = await emailService.getEmailPreferences(user.id);
-      setPreferences(userPreferences);
+      
+      // Ensure we have all required properties with default values
+      if (userPreferences && typeof userPreferences === 'object') {
+        setPreferences({
+          parcelCreated: userPreferences.parcelCreated ?? true,
+          statusUpdates: userPreferences.statusUpdates ?? true,
+          deliveryConfirmation: userPreferences.deliveryConfirmation ?? true,
+          cancellation: userPreferences.cancellation ?? true,
+          locationUpdates: userPreferences.locationUpdates ?? true,
+          marketing: userPreferences.marketing ?? false,
+          weeklyDigest: userPreferences.weeklyDigest ?? false,
+        });
+      } else {
+        // If API returns null/undefined, keep default preferences
+        console.warn('No email preferences returned from API, using defaults');
+      }
     } catch (error) {
       console.error('Failed to load email preferences:', error);
       setMessage('Failed to load email preferences');
+      // Keep default preferences on error
     } finally {
       setLoading(false);
     }
@@ -72,6 +88,11 @@ const EmailPreferences = () => {
 
   if (!user) {
     return <div className="text-center p-4">Please log in to manage email preferences.</div>;
+  }
+
+  // Show loading state while preferences are being loaded
+  if (loading) {
+    return <div className="text-center p-4">Loading email preferences...</div>;
   }
 
   return (

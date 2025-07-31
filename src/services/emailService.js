@@ -177,9 +177,17 @@ class EmailService {
           'Authorization': `Bearer ${this.getAuthToken()}`
         }
       });
-      return response.json();
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Failed to get email preferences:', error);
+      // Return null to indicate failure, component will use defaults
+      return null;
     }
   }
 
