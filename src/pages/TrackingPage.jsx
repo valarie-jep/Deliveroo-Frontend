@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
 import Navbar from "../components/Navbar";
 import RealTimeTracking from "../components/RealTimeTracking";
+import RouteProgress from "../components/RouteProgress";
 
 const GOOGLE_MAPS_LIBRARIES = ["places"];
 
@@ -71,27 +72,69 @@ const TrackingPage = () => {
     setShowTracking(true);
   };
 
-  const getCoordinates = (parcel) => {
-    if (!parcel) {
-      return center;
+  const getPickupCoordinates = (parcel) => {
+    if (!parcel || !parcel.pick_up_latitude || !parcel.pick_up_longitude) {
+      return null;
     }
+    return { 
+      lat: parseFloat(parcel.pick_up_latitude), 
+      lng: parseFloat(parcel.pick_up_longitude) 
+    };
+  };
+
+  const getDestinationCoordinates = (parcel) => {
+    if (!parcel || !parcel.destination_latitude || !parcel.destination_longitude) {
+      return null;
+    }
+    return { 
+      lat: parseFloat(parcel.destination_latitude), 
+      lng: parseFloat(parcel.destination_longitude) 
+    };
+  };
+
+  const getCurrentPosition = (parcel) => {
+    const pickup = getPickupCoordinates(parcel);
+    const destination = getDestinationCoordinates(parcel);
     
-    if (parcel.pick_up_latitude && parcel.pick_up_longitude) {
-      return { 
-        lat: parseFloat(parcel.pick_up_latitude), 
-        lng: parseFloat(parcel.pick_up_longitude) 
+    if (!pickup || !destination) {
+      return pickup || destination || center;
+    }
+
+    const status = parcel.status;
+    let progress = 0;
+
+    switch (status) {
+      case 'pending':
+        progress = 0;
+        break;
+      case 'in_transit':
+        progress = 0.5;
+        break;
+      case 'delivered':
+        progress = 1;
+        break;
+      default:
+        progress = 0.25;
+    }
+
+    return {
+      lat: pickup.lat + (destination.lat - pickup.lat) * progress,
+      lng: pickup.lng + (destination.lng - pickup.lng) * progress
+    };
+  };
+
+  const getMapCenter = (parcel) => {
+    const pickup = getPickupCoordinates(parcel);
+    const destination = getDestinationCoordinates(parcel);
+    
+    if (pickup && destination) {
+      return {
+        lat: (pickup.lat + destination.lat) / 2,
+        lng: (pickup.lng + destination.lng) / 2
       };
     }
     
-    if (parcel.destination_latitude && parcel.destination_longitude) {
-      return { 
-        lat: parseFloat(parcel.destination_latitude), 
-        lng: parseFloat(parcel.destination_longitude) 
-      };
-    }
-    
-    console.warn("No coordinates found for parcel, using default center");
-    return center;
+    return pickup || destination || center;
   };
 
 
@@ -145,6 +188,7 @@ const TrackingPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Tracking Information */}
             <div>
+              <RouteProgress parcel={parcel} />
               <RealTimeTracking parcelId={parcel.id} />
             </div>
 
@@ -175,12 +219,66 @@ const TrackingPage = () => {
                   >
                     <GoogleMap
                       mapContainerStyle={containerStyle}
-                      center={getCoordinates(parcel)}
-                      zoom={12}
+                      center={getMapCenter(parcel)}
+                      zoom={10}
                       onLoad={handleMapLoad}
                       onError={handleMapError}
                     >
-                      <Marker position={getCoordinates(parcel)} />
+                      {/* Pickup Marker */}
+                      {getPickupCoordinates(parcel) && (
+                        <Marker 
+                          position={getPickupCoordinates(parcel)}
+                          icon={{
+                            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                            scaledSize: new window.google.maps.Size(32, 32)
+                          }}
+                          label={{
+                            text: 'Pickup',
+                            className: 'marker-label'
+                          }}
+                        />
+                      )}
+
+                      {/* Destination Marker */}
+                      {getDestinationCoordinates(parcel) && (
+                        <Marker 
+                          position={getDestinationCoordinates(parcel)}
+                          icon={{
+                            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                            scaledSize: new window.google.maps.Size(32, 32)
+                          }}
+                          label={{
+                            text: 'Destination',
+                            className: 'marker-label'
+                          }}
+                        />
+                      )}
+
+                      {/* Current Position Marker */}
+                      <Marker 
+                        position={getCurrentPosition(parcel)}
+                        icon={{
+                          url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                          scaledSize: new window.google.maps.Size(40, 40)
+                        }}
+                        label={{
+                          text: 'Parcel',
+                          className: 'marker-label'
+                        }}
+                      />
+
+                      {/* Route Line */}
+                      {getPickupCoordinates(parcel) && getDestinationCoordinates(parcel) && (
+                        <Polyline
+                          path={[getPickupCoordinates(parcel), getDestinationCoordinates(parcel)]}
+                          options={{
+                            strokeColor: '#FF6B35',
+                            strokeOpacity: 0.8,
+                            strokeWeight: 4,
+                            geodesic: true
+                          }}
+                        />
+                      )}
                     </GoogleMap>
                   </LoadScript>
                 )}
