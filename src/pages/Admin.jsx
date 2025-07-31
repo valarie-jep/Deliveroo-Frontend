@@ -5,6 +5,7 @@ import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/authSlice';
 import axios from 'axios';
+import LocationAutocomplete from "../components/LocationAutocomplete";
 
 const API_BASE = process.env.REACT_APP_API_URL || '';
 
@@ -285,21 +286,30 @@ const AdminParcels = () => {
                   </button>
                 </td>
                 <td className="py-2 px-4">
-                  <input
-                    type="text"
-                    placeholder="New location"
-                    className="border px-2 py-1 rounded mr-2"
-                    value={locationUpdate[parcel.id] || ''}
-                    onChange={e => setLocationUpdate(prev => ({ ...prev, [parcel.id]: e.target.value }))}
-                  />
-                  <button
-                    className="bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-400"
-
-                    onClick={() => handleLocationChange(parcel.id)}
-                  >
-                    Update
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <LocationAutocomplete
+                      value={locationUpdate[parcel.id] || ''}
+                      onChange={(val) =>
+                        setLocationUpdate((prev) => ({ ...prev, [parcel.id]: val }))
+                      }
+                      onLocationSelect={(place) => {
+                        setLocationUpdate((prev) => ({
+                          ...prev,
+                          [parcel.id]: place.address,
+                        }));
+                      }}
+                      placeholder="New location"
+                      className="w-full border px-2 py-1 rounded"
+                    />
+                    <button
+                      className="bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-400"
+                      onClick={() => handleLocationChange(parcel.id)}
+                    >
+                      Update
+                    </button>
+                  </div>
                 </td>
+
               </tr>
             ))}
           </tbody>
