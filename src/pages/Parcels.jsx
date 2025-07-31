@@ -111,8 +111,11 @@ const Parcels = () => {
   const [viewMode, setViewMode] = React.useState("grid");
 
   useEffect(() => {
-    dispatch(fetchParcels());
-  }, [dispatch]);
+    // Don't re-fetch if we just created a parcel successfully
+    if (!parcelsState.success || parcelsState.success !== 'Parcel created successfully') {
+      dispatch(fetchParcels());
+    }
+  }, [dispatch, parcelsState.success]);
 
   // Debug logging
   console.log('Parcels State:', parcelsState);

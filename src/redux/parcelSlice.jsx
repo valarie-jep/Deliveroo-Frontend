@@ -160,6 +160,8 @@ const parcelSlice = createSlice({
         state.loading = false;
         // Ensure we always set an array
         state.parcels = Array.isArray(action.payload) ? action.payload : [];
+        console.log('📦 Fetched parcels from API:', action.payload);
+        console.log('📦 Current parcels in state:', state.parcels);
       })
       .addCase(fetchParcels.rejected, (state, action) => {
         state.loading = false;
@@ -176,8 +178,10 @@ const parcelSlice = createSlice({
         if (!Array.isArray(state.parcels)) {
           state.parcels = [];
         }
-        state.parcels.push(action.payload);
+        // Add the new parcel to the existing array
+        state.parcels.unshift(action.payload); // Add to beginning of array
         state.success = 'Parcel created successfully';
+        console.log('✅ Parcel added to Redux store:', action.payload);
       })
       .addCase(createParcel.rejected, (state, action) => {
         state.loading = false;
