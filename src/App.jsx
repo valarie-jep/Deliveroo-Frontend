@@ -26,10 +26,7 @@ import EmailSettings from "./pages/EmailSettings.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import { LoadScript } from "@react-google-maps/api";
 
-
-const libraries = ["places"];
 // Route guards
 const AuthWrapper = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -66,10 +63,7 @@ const AdminRedirectRoute = ({ children }) => {
 const App = () => {
   return (
     <Provider store={store}>
-      <LoadScript
-        googleMapsApiKey={process.env.REACT_APP_Maps_API_KEY}
-        libraries={libraries}
-      >
+      
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -159,7 +153,7 @@ const App = () => {
         {/* Global toast container — place once, near the root */}
         <ToastContainer />
       </Router>
-      </LoadScript>
+      
     </Provider>
   );
 };
