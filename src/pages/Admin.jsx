@@ -6,6 +6,10 @@ import { useDispatch } from 'react-redux';
 import { logout } from '../redux/authSlice';
 import axios from 'axios';
 import LocationAutocomplete from "../components/LocationAutocomplete";
+import { LoadScript } from "@react-google-maps/api";
+
+
+const libraries = ["places"];
 
 const API_BASE = process.env.REACT_APP_API_URL || '';
 
@@ -285,6 +289,10 @@ const AdminParcels = () => {
                     Update
                   </button>
                 </td>
+                <LoadScript
+                  googleMapsApiKey={process.env.REACT_APP_Maps_API_KEY}
+                  libraries={libraries}
+                >
                 <td className="py-2 px-4">
                   <div className="flex items-center gap-2">
                     <LocationAutocomplete
@@ -308,7 +316,7 @@ const AdminParcels = () => {
                       Update
                     </button>
                   </div>
-                </td>
+                </td></LoadScript>
 
               </tr>
             ))}
