@@ -12,7 +12,7 @@ function Dashboard() {
        <section
       className="relative bg-cover bg-center h-screen flex items-center justify-center text-white px-6"
       style={{
-        backgroundImage: "url('https://www.pexels.com/photo/person-holding-a-cellphone-and-parcel-7362883/')" 
+        backgroundImage: "url('https://images.pexels.com/photos/7362883/pexels-photo-7362883.jpeg')" 
       }}
     >
       {/* Overlay */}
