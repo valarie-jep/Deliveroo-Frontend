@@ -5,7 +5,9 @@ import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/authSlice';
 import axios from 'axios';
-import { BASE_URL } from '../config/api';
+import LocationAutocomplete from "../components/LocationAutocomplete";
+
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 // SVG Icons
 const ParcelIcon = () => (
@@ -40,7 +42,7 @@ const AdminDashboardHome = () => {
         setLoading(true);
         setError(null);
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${BASE_URL}/admin/parcels`, {
+        const res = await axios.get(`${API_BASE}/admin/parcels`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const allParcels = res.data.parcels || res.data || [];
@@ -142,7 +144,7 @@ const AdminParcels = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${BASE_URL}/admin/parcels`, {
+      const res = await axios.get(`${API_BASE}/admin/parcels`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setParcels(res.data.parcels || res.data || []);
@@ -162,7 +164,7 @@ const AdminParcels = () => {
     if (!newStatus) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${BASE_URL}/admin/parcels/${id}/status`, { status: newStatus }, {
+      await axios.patch(`${API_BASE}/admin/parcels/${id}/status`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStatusUpdate((prev) => ({ ...prev, [id]: '' }));
@@ -177,7 +179,7 @@ const AdminParcels = () => {
     if (!newLocation) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${BASE_URL}/admin/parcels/${id}/location`, { current_location: newLocation }, {
+      await axios.patch(`${API_BASE}/admin/parcels/${id}/location`, { current_location: newLocation }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLocationUpdate((prev) => ({ ...prev, [id]: '' }));
@@ -284,21 +286,30 @@ const AdminParcels = () => {
                   </button>
                 </td>
                 <td className="py-2 px-4">
-                  <input
-                    type="text"
-                    placeholder="New location"
-                    className="border px-2 py-1 rounded mr-2"
-                    value={locationUpdate[parcel.id] || ''}
-                    onChange={e => setLocationUpdate(prev => ({ ...prev, [parcel.id]: e.target.value }))}
-                  />
-                  <button
-                    className="bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-400"
-
-                    onClick={() => handleLocationChange(parcel.id)}
-                  >
-                    Update
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <LocationAutocomplete
+                      value={locationUpdate[parcel.id] || ''}
+                      onChange={(val) =>
+                        setLocationUpdate((prev) => ({ ...prev, [parcel.id]: val }))
+                      }
+                      onLocationSelect={(place) => {
+                        setLocationUpdate((prev) => ({
+                          ...prev,
+                          [parcel.id]: place.address,
+                        }));
+                      }}
+                      placeholder="New location"
+                      className="w-full border px-2 py-1 rounded"
+                    />
+                    <button
+                      className="bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-400"
+                      onClick={() => handleLocationChange(parcel.id)}
+                    >
+                      Update
+                    </button>
+                  </div>
                 </td>
+
               </tr>
             ))}
           </tbody>
@@ -320,7 +331,7 @@ const AdminHistories = () => {
         setLoading(true);
         setError(null);
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${BASE_URL}/admin/histories`, {
+        const res = await axios.get(`${API_BASE}/admin/histories`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setHistories(res.data.histories || res.data || []);
