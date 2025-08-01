@@ -34,6 +34,7 @@ const LoginPage = () => {
   return (
     <>
       <Navbar />
+      
       <LoginForm
         formData={formData}
         handleChange={handleChange}

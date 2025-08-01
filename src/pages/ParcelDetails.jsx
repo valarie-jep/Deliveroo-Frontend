@@ -33,8 +33,14 @@ const ParcelDetails = () => {
 
   return (
     <div>
+      <section
+      style={{
+        backgroundImage: "url('/images/Gemini_Generated_Image_xpv9x6xpv9x6xpv9.jpeg')" 
+      }}
+    >
       {!isAdmin && <Navbar />}
       <div className="max-w-xl mx-auto mt-16 p-6 bg-white rounded shadow">
+        
         <h2 className="text-2xl font-bold mb-4 text-orange-600">Parcel #{parcel.id} Details</h2>
 
         <div className="space-y-2 text-gray-800">
@@ -68,7 +74,7 @@ const ParcelDetails = () => {
           </button>)}
           
         </div>
-      </div>
+      </div></section>
     </div>
   );
 };

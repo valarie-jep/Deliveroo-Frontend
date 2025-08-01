@@ -170,10 +170,15 @@ const Parcels = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={{
+        backgroundImage: "url('/images/pexels-quintingellar-2199293.jpg')" 
+      }}>
       <Navbar />
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-4 pt-8 max-w-6xl mx-auto gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-4 pt-8 max-w-6xl mx-auto gap-4"
+    >
+      
   <h2 className="text-2xl font-bold text-orange-600">My Parcels</h2>
+  
 
   <div className="flex flex-col md:flex-row items-center gap-4">
     <input
