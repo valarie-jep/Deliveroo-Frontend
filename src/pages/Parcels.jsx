@@ -1,7 +1,7 @@
 import React, { useEffect,useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getParcels, cancelParcel,updateParcelDestination } from "../redux/parcelSlice";
+import { fetchParcels, cancelParcel,updateParcelDestination } from "../redux/parcelSlice";
 import Navbar from "../components/Navbar";
 import DestinationModal from '../components/DestinationModal';
 
@@ -79,9 +79,7 @@ const ParcelCard = ({ parcel }) => {
           View Details
         </button>
         {parcel.status !== "cancelled" && parcel.status !== "delivered" &&(<button
-          onClick={() =>
-            navigate("/tracking", { state: { trackingId: parcel.id } })
-          }
+                            onClick={() => navigate(`/tracking/${parcel.id}`, { state: { trackingId: parcel.id } })}
           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md transition"
         >
           Track
@@ -127,34 +125,41 @@ const Parcels = () => {
   const navigate = useNavigate();
   const parcelsState = useSelector((state) => state.parcels) || {};
   const user = useSelector((state) => state.auth.user);
-  const { list = [], loading = false, error = null } = parcelsState;
+  const { parcels = [], loading = false, error = null } = parcelsState;
   const [searchTerm, setSearchTerm] = React.useState('');
   const [sortBy, setSortBy] = React.useState('');
   const [viewMode, setViewMode] = React.useState("grid");
 
   useEffect(() => {
-    dispatch(getParcels());
-  }, [dispatch]);
+    if (parcelsState.success) {
+      return;
+    }
+    dispatch(fetchParcels());
+  }, [dispatch, parcelsState.success]);
+
+  // Show all parcels for now (temporarily disable user filtering)
+  const filteredList = parcels;
+  const displayList = filteredList;
 
   if (loading) return <p className="text-center mt-6">Loading parcels...</p>;
   if (error)
     return <p className="text-center mt-6 text-red-500">Error: {error}</p>;
-  if (!Array.isArray(list)) {
+  if (!Array.isArray(parcels)) {
     return <p className="text-red-600">Parcel data is invalid</p>;
   }
-  const filteredList = user
-  ? list.filter((parcel) => parcel.user_id === user.id)
-  : [];
+  
   // Filter by search term
-  const searchFiltered = filteredList.filter((parcel) => {
+  const searchFiltered = displayList.filter((parcel) => {
     const term = searchTerm.toLowerCase();
-    return (
+    const matches = (
       parcel.status?.toLowerCase().includes(term) ||
       parcel.sender_name?.toLowerCase().includes(term) ||
       parcel.recipient_name?.toLowerCase().includes(term) ||
       parcel.pickup_location_text?.toLowerCase().includes(term) ||
       parcel.destination_location_text?.toLowerCase().includes(term)
     );
+    
+    return matches;
   });
   
   // Sort based on selection
@@ -174,46 +179,62 @@ const Parcels = () => {
         backgroundImage: "url('/images/pexels-quintingellar-2199293.jpg')" 
       }}>
       <Navbar />
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-4 pt-8 max-w-6xl mx-auto gap-4"
-    >
       
-  <h2 className="text-2xl font-bold text-orange-600">My Parcels</h2>
-  
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Header with Search and Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+          <h1 className="text-3xl font-bold text-orange-600">My Parcels</h1>
+          
+          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            {/* Search */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search parcels..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            >
+              <option value="">Sort by...</option>
+              <option value="status">Status</option>
+              <option value="sender">Sender</option>
+              <option value="created_at">Date Created</option>
+            </select>
+            
+            {/* View Toggle */}
+            <button
+              onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Switch to {viewMode === "grid" ? "List" : "Grid"} View
+            </button>
+            
+            {/* Create New Parcel */}
+            <button
+              onClick={() => navigate("/parcels/new")}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
+            >
+              Create New Parcel
+            </button>
+          </div>
+        </div>
+        
+        {/* Parcels Content */}
+        <div className="p-4 max-w-6xl mx-auto w-full">
 
-  <div className="flex flex-col md:flex-row items-center gap-4">
-    <input
-      type="text"
-      placeholder="Search parcels..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="border px-3 py-2 rounded-md shadow-sm"
-    />
-
-    <select
-      value={sortBy}
-      onChange={(e) => setSortBy(e.target.value)}
-      className="border px-3 py-2 rounded-md shadow-sm"
-    >
-      <option value="">Sort by...</option>
-      <option value="status">Status</option>
-      <option value="receipient">Receipient Name</option>
-      <option value="created_at">Date Created</option>
-    </select>
-    <button
-      onClick={() => setViewMode((prev) => (prev === "grid" ? "list" : "grid"))}
-      className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded hover:bg-gray-300 transition"
-    >
-      {viewMode === "grid" ? "Switch to List View" : "Switch to Grid View"}
-    </button>
-    <button
-      onClick={() => navigate("/parcels/new")}
-      className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition"
-    >
-      Create New Parcel
-    </button>
-  </div>
-</div>
-      <div className="p-4 max-w-6xl mx-auto w-full">
   {sortedList.length === 0 ? (
     <p className="text-center text-gray-600">No parcels found.</p>
   ) : viewMode === "grid" ? (
@@ -281,9 +302,7 @@ const Parcels = () => {
                   View
                 </button>
                 <button
-                  onClick={() =>
-                    navigate("/tracking", { state: { trackingId: parcel.id } })
-                  }
+                  onClick={() => navigate(`/tracking/${parcel.id}`, { state: { trackingId: parcel.id } })}
                   className="bg-orange-500 text-white px-3 py-1 rounded-md text-xs hover:bg-orange-600 transition"
                 >
                   Track
@@ -310,8 +329,8 @@ const Parcels = () => {
       </table>
     </div>
   )}
-</div>
-
+        </div>
+      </div>
     </div>
   );
 };

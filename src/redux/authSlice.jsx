@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { notify } from '../utils/toast';
-
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
+import { BASE_URL } from '../config/api';
 
 const tokenFromStorage = localStorage.getItem('token');
 const userFromStorage = localStorage.getItem('user');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import emailService from '../services/emailService';
+import { getEmailErrorMessage } from '../utils/emailErrorHandler';
 
 const EmailPreferences = () => {
   const user = useSelector((state) => state.auth.user);
@@ -19,11 +20,31 @@ const EmailPreferences = () => {
   const loadEmailPreferences = useCallback(async () => {
     try {
       setLoading(true);
+      setMessage(''); // Clear any previous messages
+      
       const userPreferences = await emailService.getEmailPreferences(user.id);
-      setPreferences(userPreferences);
+      
+      // Ensure we have all required properties with default values
+      if (userPreferences && typeof userPreferences === 'object') {
+        setPreferences({
+          parcelCreated: userPreferences.parcelCreated ?? true,
+          statusUpdates: userPreferences.statusUpdates ?? true,
+          deliveryConfirmation: userPreferences.deliveryConfirmation ?? true,
+          cancellation: userPreferences.cancellation ?? true,
+          locationUpdates: userPreferences.locationUpdates ?? true,
+          marketing: userPreferences.marketing ?? false,
+          weeklyDigest: userPreferences.weeklyDigest ?? false,
+        });
+      } else {
+        // If API returns null/undefined, keep default preferences
+        console.warn('Email preferences API not available, using default preferences');
+        setMessage('Email preferences API not available. Using default settings.');
+      }
     } catch (error) {
       console.error('Failed to load email preferences:', error);
-      setMessage('Failed to load email preferences');
+      const errorMessage = getEmailErrorMessage(error);
+      setMessage(`Email preferences service is currently unavailable: ${errorMessage}`);
+      // Keep default preferences on error
     } finally {
       setLoading(false);
     }
@@ -50,7 +71,10 @@ const EmailPreferences = () => {
       setMessage('Email preferences updated successfully!');
     } catch (error) {
       console.error('Failed to update email preferences:', error);
-      setMessage('Failed to update email preferences');
+      const errorMessage = getEmailErrorMessage(error);
+      setMessage(`Email preferences service is currently unavailable: ${errorMessage}`);
+      // Store preferences locally as fallback
+      localStorage.setItem('emailPreferences', JSON.stringify(preferences));
     } finally {
       setLoading(false);
     }
@@ -60,11 +84,13 @@ const EmailPreferences = () => {
     try {
       setLoading(true);
       setMessage('');
+      console.log('Sending test email from EmailPreferences component...');
       await emailService.sendTestEmail(user.email);
-      setMessage('Test email sent successfully!');
+      setMessage('Test email sent successfully! Check your inbox (and spam folder).');
     } catch (error) {
       console.error('Failed to send test email:', error);
-      setMessage('Failed to send test email');
+      const errorMessage = getEmailErrorMessage(error);
+      setMessage(`Failed to send test email: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -72,6 +98,11 @@ const EmailPreferences = () => {
 
   if (!user) {
     return <div className="text-center p-4">Please log in to manage email preferences.</div>;
+  }
+
+  // Show loading state while preferences are being loaded
+  if (loading) {
+    return <div className="text-center p-4">Loading email preferences...</div>;
   }
 
   return (

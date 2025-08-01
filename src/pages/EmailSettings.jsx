@@ -4,35 +4,50 @@ import Navbar from '../components/Navbar';
 import EmailPreferences from '../components/EmailPreferences';
 import PasswordReset from '../components/PasswordReset';
 import EmailNotification from '../components/EmailNotification';
+import EmailStatusChecker from '../components/EmailStatusChecker';
 import emailService from '../services/emailService';
+import { getEmailErrorMessage, getEmailDebugInfo } from '../utils/emailErrorHandler';
 
 const EmailSettings = () => {
   const user = useSelector((state) => state.auth.user);
   const [activeTab, setActiveTab] = useState('preferences');
   const [notification, setNotification] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
-    setTimeout(() => setNotification(null), 5000);
+    setTimeout(() => setNotification(null), 8000); // Show for 8 seconds
   };
 
   const tabs = [
     { id: 'preferences', label: 'Email Preferences', icon: '⚙️' },
     { id: 'password', label: 'Password Reset', icon: '🔐' },
     { id: 'test', label: 'Test Email', icon: '📧' },
+    { id: 'status', label: 'System Status', icon: '🔍' },
   ];
 
   const handleTestEmail = async () => {
     try {
+      console.log('Starting test email process...');
+      
+      // Get debug info
+      const debug = getEmailDebugInfo();
+      setDebugInfo(debug);
+      console.log('Debug info:', debug);
+      
       const result = await emailService.sendTestEmail(user.email);
+      console.log('Test email result:', result);
+      
       if (result && result.success) {
-        showNotification('success', 'Test email sent successfully!');
+        showNotification('success', 'Test email sent successfully! Check your inbox (and spam folder).');
       } else {
-        showNotification('error', 'Failed to send test email');
+        const errorMessage = result?.error || 'Unknown error occurred';
+        showNotification('error', `Failed to send test email: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Test email error:', error);
-      showNotification('error', 'Failed to send test email');
+      const errorMessage = getEmailErrorMessage(error);
+      showNotification('error', `Failed to send test email: ${errorMessage}`);
     }
   };
 
@@ -128,6 +143,7 @@ const EmailSettings = () => {
                         <p>• Test emails will be sent to: <strong>{user.email}</strong></p>
                         <p>• Check your spam folder if you don't receive the email</p>
                         <p>• Test emails help verify your email settings are working</p>
+                        <p>• If emails fail, check the debug information below</p>
                       </div>
                     </div>
                   </div>
@@ -135,10 +151,32 @@ const EmailSettings = () => {
 
                 <button
                   onClick={handleTestEmail}
-                  className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
+                  className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition mb-4"
                 >
                   Send Test Email
                 </button>
+
+                {debugInfo && (
+                  <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-800 mb-2">Debug Information</h4>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <p>• Email Enabled: {debugInfo.emailEnabled ? 'Yes' : 'No'}</p>
+                      <p>• API URL: {debugInfo.apiUrl}</p>
+                      <p>• Authentication Token: {debugInfo.hasToken ? 'Present' : 'Missing'}</p>
+                      <p>• Timestamp: {debugInfo.timestamp}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'status' && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Email System Status</h2>
+                <p className="text-gray-600 mb-6">
+                  Check the status of your email system and diagnose any issues.
+                </p>
+                <EmailStatusChecker />
               </div>
             )}
           </div>
@@ -154,6 +192,7 @@ const EmailSettings = () => {
                 <li>• Emails going to spam folder</li>
                 <li>• Incorrect email address</li>
                 <li>• Email preferences not saving</li>
+                <li>• Backend email service not configured</li>
               </ul>
             </div>
             <div>
@@ -163,6 +202,7 @@ const EmailSettings = () => {
                 <li>• Add our email to your contacts</li>
                 <li>• Verify your email address is correct</li>
                 <li>• Clear browser cache and try again</li>
+                <li>• Contact support if backend is not configured</li>
               </ul>
             </div>
           </div>

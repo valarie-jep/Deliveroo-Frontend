@@ -3,6 +3,9 @@ export const API_CONFIG = {
   EMAIL_ENABLED: process.env.REACT_APP_EMAIL_ENABLED !== 'false'
 };
 
+// Direct export for backward compatibility
+export const BASE_URL = process.env.REACT_APP_API_URL || '';
+
 export const EMAIL_ENDPOINTS = {
   PARCEL_CREATED: '/email/parcel-created',
   STATUS_UPDATE: '/email/status-update',

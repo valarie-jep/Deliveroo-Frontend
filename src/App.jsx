@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -25,11 +25,6 @@ import EmailSettings from "./pages/EmailSettings.jsx";
 // Toastify (global container)
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-import { LoadScript } from "@react-google-maps/api";
-
-
-const libraries = ["places"];
 
 // Route guards
 const AuthWrapper = ({ children }) => {
@@ -67,11 +62,7 @@ const AdminRedirectRoute = ({ children }) => {
 const App = () => {
   return (
     <Provider store={store}>
-      <LoadScript
-        googleMapsApiKey={process.env.REACT_APP_Maps_API_KEY}
-        libraries={libraries}
-      >
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -124,12 +115,16 @@ const App = () => {
             }
           />
           <Route
-            path="/tracking"
+            path="/tracking/:parcelId"
             element={
               <AuthWrapper>
                 <TrackingPage />
               </AuthWrapper>
             }
+          />
+          <Route
+            path="/tracking"
+            element={<Navigate to="/parcels" replace />}
           />
           <Route
             path="/profile"
@@ -156,7 +151,6 @@ const App = () => {
         {/* Global toast container — place once, near the root */}
         <ToastContainer />
       </Router>
-      </LoadScript>
     </Provider>
   );
 };

@@ -1,32 +1,51 @@
-export const handleEmailError = (error, action) => {
+import { BASE_URL } from '../config/api';
+
+export const logEmailError = (action, error) => {
   console.error(`Email ${action} failed:`, error);
-  
-  // Don't break the main functionality if email fails
-  // Just log the error and continue
-  return {
-    success: false,
-    error: `Email ${action} failed, but operation completed`
-  };
-};
-
-export const isEmailEnabled = () => {
-  return process.env.REACT_APP_EMAIL_ENABLED !== 'false';
-};
-
-export const validateEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
 };
 
 export const getEmailErrorMessage = (error) => {
-  if (error.message?.includes('network')) {
-    return 'Network error. Please check your connection.';
+  if (!error) return 'An unknown error occurred';
+  
+  // Handle different error types
+  if (error.response) {
+    const { status, data } = error.response;
+    
+    switch (status) {
+      case 400:
+        return data?.message || 'Invalid request. Please check your input.';
+      case 401:
+        return 'Authentication required. Please log in again.';
+      case 403:
+        return 'You are not authorized to perform this action.';
+      case 404:
+        return 'Email service not found. Please contact support.';
+      case 429:
+        return 'Too many requests. Please try again later.';
+      case 500:
+        return 'Server error. Please try again later.';
+      default:
+        return data?.message || `Server error (${status}). Please try again.`;
+    }
   }
-  if (error.message?.includes('401')) {
-    return 'Authentication failed. Please log in again.';
+  
+  if (error.request) {
+    return 'Network error. Please check your connection and try again.';
   }
-  if (error.message?.includes('500')) {
-    return 'Server error. Please try again later.';
-  }
-  return 'Email operation failed. Please try again.';
+  
+  return error.message || 'An unexpected error occurred';
+};
+
+export const getEmailDebugInfo = () => {
+  const isEmailEnabled = () => {
+    return process.env.REACT_APP_EMAIL_ENABLED !== 'false';
+  };
+
+  return {
+    emailEnabled: isEmailEnabled(),
+    apiUrl: BASE_URL || 'Not set',
+    hasToken: !!localStorage.getItem('token'),
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString()
+  };
 }; 

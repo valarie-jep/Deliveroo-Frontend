@@ -1,18 +1,36 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchParcels } from '../redux/parcelSlice';
 import Navbar from '../components/Navbar';
 
 const ParcelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const parcel = useSelector(state =>
-    state.parcels.list.find(p => String(p.id) === String(id))
-  );
+  // Debug logging
+  console.log('🔍 ParcelDetails - ParcelId from URL:', id);
+  console.log('🔍 ParcelDetails - All parcels in store:', useSelector(state => state.parcels?.parcels));
+
+  const parcel = useSelector(state => {
+    // Ensure state.parcels.parcels is an array
+    const parcels = state.parcels?.parcels || [];
+    const foundParcel = parcels.find(p => String(p.id) === String(id));
+    console.log('🔍 ParcelDetails - Found parcel:', foundParcel);
+    return foundParcel;
+  });
 
   const user = useSelector(state => state.auth.user);
   const isAdmin = user?.admin;
+
+  // Fetch parcels if not found
+  React.useEffect(() => {
+    if (!parcel && id) {
+      console.log('🔍 Parcel not found in store, fetching parcels...');
+      dispatch(fetchParcels());
+    }
+  }, [parcel, id, dispatch]);
 
   if (!parcel) {
     return (
@@ -67,7 +85,7 @@ const ParcelDetails = () => {
             Back Parcels
           </button>
           {isAdmin?(''):(<button
-            onClick={() => navigate(`/tracking`, { state: { trackingId: parcel.id } })}
+            onClick={() => navigate(`/tracking/${parcel.id}`, { state: { trackingId: parcel.id } })}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
           >
             Track Parcel

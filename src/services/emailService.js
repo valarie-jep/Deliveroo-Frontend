@@ -1,6 +1,8 @@
+import { BASE_URL } from '../config/api';
+
 class EmailService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || '';
+    this.baseURL = BASE_URL;
   }
 
   // Get JWT token from localStorage or Redux store
@@ -22,9 +24,16 @@ class EmailService {
           user_email: userEmail
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Email service unavailable'}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to send parcel created email:', error);
+      throw error;
     }
   }
 
@@ -44,9 +53,16 @@ class EmailService {
           new_status: newStatus
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Email service unavailable'}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to send status update email:', error);
+      throw error;
     }
   }
 
@@ -64,9 +80,16 @@ class EmailService {
           user_email: userEmail
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Email service unavailable'}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to send delivery confirmation email:', error);
+      throw error;
     }
   }
 
@@ -84,9 +107,16 @@ class EmailService {
           user_email: userEmail
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Email service unavailable'}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to send cancellation email:', error);
+      throw error;
     }
   }
 
@@ -105,9 +135,16 @@ class EmailService {
           new_location: newLocation
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Email service unavailable'}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to send location update email:', error);
+      throw error;
     }
   }
 
@@ -124,9 +161,16 @@ class EmailService {
           username: username
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Email service unavailable'}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to send welcome email:', error);
+      throw error;
     }
   }
 
@@ -142,15 +186,25 @@ class EmailService {
           email: email
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Email service unavailable'}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to send password reset email:', error);
+      throw error;
     }
   }
 
   // Send test email
   async sendTestEmail(userEmail) {
     try {
+      console.log('Attempting to send test email to:', userEmail);
+      console.log('Using base URL:', this.baseURL);
+      
       const response = await fetch(`${this.baseURL}/email/test`, {
         method: 'POST',
         headers: {
@@ -161,9 +215,21 @@ class EmailService {
           user_email: userEmail
         })
       });
-      return response.json();
+      
+      console.log('Test email response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Test email error response:', errorData);
+        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Email service unavailable'}`);
+      }
+      
+      const result = await response.json();
+      console.log('Test email success response:', result);
+      return result;
     } catch (error) {
       console.error('Failed to send test email:', error);
+      throw error;
     }
   }
 
@@ -174,12 +240,24 @@ class EmailService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAuthToken()}`
-        }
+          'Authorization': `Bearer ${this.getAuthToken()}`,
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'include'
       });
-      return response.json();
+      
+      if (!response.ok) {
+        console.warn(`Email preferences API returned status: ${response.status}`);
+        return null;
+      }
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Failed to get email preferences:', error);
+      // Return null to indicate failure, component will use defaults
+      return null;
     }
   }
 
@@ -190,13 +268,22 @@ class EmailService {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAuthToken()}`
+          'Authorization': `Bearer ${this.getAuthToken()}`,
+          'Accept': 'application/json'
         },
+        mode: 'cors',
+        credentials: 'include',
         body: JSON.stringify(preferences)
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return response.json();
     } catch (error) {
       console.error('Failed to update email preferences:', error);
+      throw error;
     }
   }
 }
