@@ -10,6 +10,11 @@ const LoginForm = ({
   isLoading,
 }) => {
   return (
+    <section
+      style={{
+        backgroundImage: "url('/images/pexels-pixabay-255464.jpg')" 
+      }}
+    >
     <AuthForm title="Sign in to your account" onSubmit={handleSubmit}>
       <InputField
         label="Username"
@@ -61,7 +66,7 @@ const LoginForm = ({
           </Link>
         </p>
       </div>
-    </AuthForm>
+    </AuthForm></section>
   );
 };
 
